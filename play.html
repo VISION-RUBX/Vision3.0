@@ -1,1 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Playing Game</title>
 
+  <style>
+    body {
+      margin: 0;
+      background: #000;
+      font-family: Arial;
+    }
+
+    iframe {
+      width: 100vw;
+      height: 100vh;
+      border: none;
+    }
+
+    #back {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      z-index: 10;
+      padding: 10px 14px;
+      border: none;
+      border-radius: 10px;
+      background: #222;
+      color: white;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+
+<button id="back" onclick="goBack()">← Back</button>
+
+<iframe id="game"></iframe>
+
+<script>
+  // get game name from URL like: play.html?game=basketball
+  const params = new URLSearchParams(window.location.search);
+  const game = params.get("game");
+
+  // ALL YOUR GAMES GO HERE (links only)
+  const games = {
+    basketball: "https://vision-rubx.github.io/BASKETBALL_STARS/",
+  };
+
+  // load game
+  document.getElementById("game").src = games[game];
+
+  function goBack() {
+    window.location.href = "index.html";
+  }
+</script>
+
+</body>
+</html>
