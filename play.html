@@ -1,59 +1,56 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Playing Game</title>
-
-  <style>
-    body {
-      margin: 0;
-      background: #000;
-      font-family: Arial;
-    }
-
-    iframe {
-      width: 100vw;
-      height: 100vh;
-      border: none;
-    }
-
-    #back {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      z-index: 10;
-      padding: 10px 14px;
-      border: none;
-      border-radius: 10px;
-      background: #222;
-      color: white;
-      cursor: pointer;
-    }
-  </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#040404">
+  <title>Vision 3.0 Player</title>
+  <link rel="stylesheet" href="./styles.css">
+  <script src="./play.js" defer></script>
 </head>
+<body class="page page-play">
+  <div class="page-transition" aria-hidden="true"></div>
 
-<body>
+  <div class="player-shell">
+    <header class="player-bar">
+      <div class="player-actions">
+        <button id="backButton" class="back-button" type="button">
+          <span aria-hidden="true">&larr;</span>
+          <span>Homepage</span>
+        </button>
 
-<button id="back" onclick="goBack()">← Back</button>
+        <button id="fullscreenButton" class="ghost-button" type="button">
+          <span aria-hidden="true">&#x26F6;</span>
+          <span id="fullscreenLabel">Fullscreen</span>
+        </button>
+      </div>
 
-<iframe id="game"></iframe>
+      <div class="player-meta">
+        <p class="eyebrow">Now Playing</p>
+        <h1 id="playerTitle">Loading game...</h1>
+      </div>
 
-<script>
-  // get game name from URL like: play.html?game=basketball
-  const params = new URLSearchParams(window.location.search);
-  const game = params.get("game");
+      <p id="playerStatus" class="player-status">Preparing player...</p>
+    </header>
 
-  // ALL YOUR GAMES GO HERE (links only)
-  const games = {
-    basketball_legends: "https://vision-rubx.github.io/BASKETBALL_STARS/",
-  };
+    <main class="player-main">
+      <div id="playerError" class="state-block hidden" role="alert">
+        <h2>Game not found</h2>
+        <p>That game key was missing or invalid. Return to the launcher and try another game.</p>
+      </div>
 
-  // load game
-  document.getElementById("game").src = games[game];
-
-  function goBack() {
-    window.location.href = "index.html";
-  }
-</script>
-
+      <section id="frameWrap" class="frame-wrap hidden" tabindex="-1">
+        <div id="frameLoading" class="frame-loading">Launching game...</div>
+        <iframe
+          id="gameFrame"
+          title="Game player"
+          loading="eager"
+          allow="autoplay; fullscreen; gamepad; clipboard-read; clipboard-write"
+          referrerpolicy="strict-origin-when-cross-origin"
+          allowfullscreen
+        ></iframe>
+      </section>
+    </main>
+  </div>
 </body>
 </html>

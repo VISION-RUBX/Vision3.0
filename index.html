@@ -1,1 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#040404">
+  <title>Vision 3.0 Launcher</title>
+  <link rel="stylesheet" href="./styles.css">
+  <script src="./app.js" defer></script>
+</head>
+<body class="page page-index">
+  <div class="page-transition" aria-hidden="true"></div>
 
+  <div class="page-shell">
+    <header class="topbar">
+      <div class="brand-block">
+        <p class="eyebrow">GitHub Pages Game Launcher</p>
+        <h1>Vision 3.0</h1>
+        <p class="intro-copy">
+          For whoever finds it
+        </p>
+      </div>
+
+      <label class="search-shell" for="searchInput">
+        <span class="search-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" role="img" aria-hidden="true">
+            <path d="M10.5 4a6.5 6.5 0 1 0 4.18 11.48l4.91 4.92 1.41-1.42-4.91-4.91A6.5 6.5 0 0 0 10.5 4Zm0 2a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9Z"></path>
+          </svg>
+        </span>
+        <input
+          id="searchInput"
+          class="search-input"
+          type="search"
+          placeholder="Search games..."
+          autocomplete="off"
+          spellcheck="false"
+        >
+      </label>
+    </header>
+
+    <section class="hero-band" aria-label="Launcher overview">
+      <div class="hero-metrics">
+        <div class="metric">
+          <span class="metric-label">Games Loaded</span>
+          <strong id="gameCount">0</strong>
+        </div>
+        <div class="metric">
+          <span class="metric-label">Results Shown</span>
+          <strong id="resultCount">0</strong>
+        </div>
+      </div>
+    </section>
+
+    <section class="tab-bar" aria-label="Launcher sections">
+      <div class="tab-shell" role="tablist" aria-label="Launcher tabs">
+        <button
+          id="gamesTab"
+          class="tab-button is-active"
+          type="button"
+          role="tab"
+          aria-selected="true"
+          aria-controls="gamesPanel"
+          data-tab="games"
+        >
+          <span>Games</span>
+          <strong id="gamesTabCount">0</strong>
+        </button>
+
+        <button
+          id="updatesTab"
+          class="tab-button"
+          type="button"
+          role="tab"
+          aria-selected="false"
+          aria-controls="updatesPanel"
+          data-tab="updates"
+        >
+          <span>Updates</span>
+          <strong id="updatesTabCount">0</strong>
+        </button>
+      </div>
+    </section>
+
+    <section class="results-bar" aria-label="Search results">
+      <p id="statusText" class="status-text">Loading games...</p>
+      <button id="clearSearch" class="ghost-button" type="button" hidden>Clear</button>
+    </section>
+
+    <main class="launcher-main">
+      <div id="loadingState" class="state-block">
+        <h2>Loading launcher...</h2>
+        <p>Pulling games from <code>games.json</code>.</p>
+      </div>
+
+      <div id="errorState" class="state-block hidden" role="alert">
+        <h2>Could not load games</h2>
+        <p>
+          Make sure <code>games.json</code> exists in this repo and contains valid
+          JSON with game keys and URLs.
+        </p>
+      </div>
+
+      <div id="emptyState" class="state-block hidden" aria-live="polite">
+        <h2>No matching games</h2>
+        <p>Try a shorter search or clear the current filter.</p>
+      </div>
+
+      <section
+        id="gamesPanel"
+        class="content-panel"
+        role="tabpanel"
+        aria-labelledby="gamesTab"
+      >
+        <section id="gameGrid" class="game-grid hidden" aria-live="polite"></section>
+      </section>
+
+      <section
+        id="updatesPanel"
+        class="content-panel hidden"
+        role="tabpanel"
+        aria-labelledby="updatesTab"
+      >
+        <div id="updatesEmptyState" class="state-block hidden" aria-live="polite">
+          <h2>No matching updates</h2>
+          <p>Try a different search or add a new item to <code>updates.json</code>.</p>
+        </div>
+
+        <section id="updatesList" class="updates-list hidden" aria-live="polite"></section>
+      </section>
+    </main>
+  </div>
+</body>
+</html>
