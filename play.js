@@ -1,64 +1,99 @@
-const GAME_DATA_PATH = "./games.json";
-const TITLE_FALLBACK = "Vision 3.0 Player";
-const GAME_NAME_OVERRIDES = {
-  fridaynightfunkingsonicexe: "Friday Night Funkin Exe",
-  idkthegamenamelol: "Tomb Of The Mask",
-  slowp: "Slope",
-  subiceland: "Subway Surfers Iceland",
-  webcomewhatwebehold: "We Become What We Behold",
-  whackyobuss: "Whack Your Boss",
-  whackyurpc: "Whack Your PC",
-  whg1: "Worlds Hardest Game 1"
-};
+import {
+  createMusicPlayer,
+  formatDisplayName,
+  initFocusMode,
+  initParticleField,
+  loadJson,
+  markPageReady,
+  mountMusicDock,
+  startTransition
+} from "./site.js";
 
-const backButton = document.getElementById("backButton");
+const GAME_DATA_PATH = "./games.json";
+const MUSIC_DATA_PATH = "./music.json";
+
+const particleCanvas = document.getElementById("particleCanvas");
+const homepageButton = document.getElementById("homepageButton");
 const fullscreenButton = document.getElementById("fullscreenButton");
 const fullscreenLabel = document.getElementById("fullscreenLabel");
+const focusModeButton = document.getElementById("focusModeButton");
 const playerTitle = document.getElementById("playerTitle");
+const playerMeta = document.getElementById("playerMeta");
 const playerStatus = document.getElementById("playerStatus");
 const playerError = document.getElementById("playerError");
 const frameWrap = document.getElementById("frameWrap");
 const frameLoading = document.getElementById("frameLoading");
 const gameFrame = document.getElementById("gameFrame");
-let isLeavingHomepage = false;
+const musicDock = document.getElementById("musicDock");
+
+let musicController = null;
+let previousMuteState = null;
+let leaving = false;
 
 document.addEventListener("DOMContentLoaded", async () => {
-  requestAnimationFrame(() => {
-    document.body.classList.add("is-ready");
+  markPageReady();
+
+  const focusMode = initFocusMode(focusModeButton);
+  const particles = initParticleField(particleCanvas);
+  focusMode.subscribe(enabled => {
+    particles.setFocusMode(enabled);
+
+    if (!musicController) {
+      return;
+    }
+
+    if (enabled) {
+      previousMuteState = musicController.getState().muted;
+      musicController.setMuted(true);
+      return;
+    }
+
+    if (previousMuteState !== null) {
+      musicController.setMuted(previousMuteState);
+      previousMuteState = null;
+    }
   });
 
-  backButton.addEventListener("click", goBack);
+  homepageButton.addEventListener("click", goHome);
   fullscreenButton.addEventListener("click", toggleFullscreen);
   document.addEventListener("fullscreenchange", syncFullscreenState);
   document.addEventListener("keydown", handleKeydown, true);
-  await loadSelectedGame();
+
+  await loadPlayer();
 });
 
-async function loadSelectedGame() {
+async function loadPlayer() {
   const params = new URLSearchParams(window.location.search);
   const selectedKey = params.get("game");
 
   if (!selectedKey) {
-    showError("No game key was provided in the URL.");
+    showError("No game key was provided.");
     return;
   }
 
   try {
-    const response = await fetch(GAME_DATA_PATH, { cache: "no-store" });
-    if (!response.ok) {
-      throw new Error("Unable to fetch games.json");
+    const [games, tracks] = await Promise.all([
+      loadJson(GAME_DATA_PATH),
+      loadJson(MUSIC_DATA_PATH)
+    ]);
+
+    musicController = createMusicPlayer(Array.isArray(tracks) ? tracks : []);
+    mountMusicDock(musicDock, musicController);
+    if (document.body.classList.contains("focus-mode")) {
+      previousMuteState = musicController.getState().muted;
+      musicController.setMuted(true);
     }
 
-    const rawGames = await response.json();
-    const selectedUrl = rawGames[selectedKey];
-    if (!selectedUrl) {
-      showError(`The key "${selectedKey}" does not exist in games.json.`);
+    const game = Array.isArray(games) ? games.find(entry => entry.key === selectedKey) : null;
+    if (!game) {
+      showError("That game was not found in the validated list.");
       return;
     }
 
-    const displayName = formatGameName(selectedKey, selectedUrl);
+    const displayName = formatDisplayName(game.name);
     playerTitle.textContent = displayName;
-    playerStatus.textContent = "Launching game...";
+    playerMeta.textContent = `${game.platform || "Web"} • ${game.category === "Mixed" ? "Mixed / Featured" : `Category ${game.category}`}`;
+    playerStatus.textContent = "Opening local validated build...";
     document.title = `${displayName} | Vision 3.0`;
 
     frameWrap.classList.remove("hidden");
@@ -68,26 +103,27 @@ async function loadSelectedGame() {
 
     gameFrame.addEventListener("load", () => {
       frameWrap.classList.add("is-loaded");
-      playerStatus.textContent = "Game loaded. Use Fullscreen, Enter exits fullscreen, and Homepage returns you to the hub.";
       frameLoading.textContent = "Game ready.";
+      playerStatus.textContent = "Game loaded. Fullscreen is available, and Enter exits fullscreen.";
     }, { once: true });
 
-    gameFrame.src = selectedUrl;
+    gameFrame.src = game.path;
   } catch (error) {
     console.error(error);
-    showError("The player could not load games.json.");
+    showError("The player could not load its local files.");
   }
 }
 
-async function goBack() {
-  if (isLeavingHomepage) {
+async function goHome() {
+  if (leaving) {
     return;
   }
 
-  isLeavingHomepage = true;
-  playerStatus.textContent = "Returning to homepage...";
-  backButton.disabled = true;
+  leaving = true;
+  homepageButton.disabled = true;
   fullscreenButton.disabled = true;
+  focusModeButton.disabled = true;
+  playerStatus.textContent = "Returning to homepage...";
 
   if (document.fullscreenElement === frameWrap) {
     try {
@@ -99,61 +135,15 @@ async function goBack() {
 
   startTransition(() => {
     window.location.href = "./index.html";
-  }, 260);
+  }, 280);
 }
 
 function showError(message) {
-  playerTitle.textContent = "Game not found";
-  playerStatus.textContent = "Return to the launcher and try another game.";
   playerError.classList.remove("hidden");
-  const paragraph = playerError.querySelector("p");
-  if (paragraph) {
-    paragraph.textContent = message;
-  }
-  document.title = TITLE_FALLBACK;
-}
-
-function formatGameName(key, url) {
-  if (GAME_NAME_OVERRIDES[key]) {
-    return GAME_NAME_OVERRIDES[key];
-  }
-
-  let slug = key;
-
-  try {
-    const parsed = new URL(url);
-    const parts = parsed.pathname.split("/").filter(Boolean);
-    if (parts.length > 0) {
-      slug = parts[parts.length - 1];
-    }
-  } catch (error) {
-    slug = key;
-  }
-
-  return slug
-    .replace(/[-_]+/g, " ")
-    .replace(/\s+/g, " ")
-    .trim()
-    .split(" ")
-    .map(token => formatToken(token))
-    .join(" ");
-}
-
-function formatToken(token) {
-  if (!token) {
-    return token;
-  }
-
-  const upperTokens = new Set(["fnaf", "csgo", "lol", "io", "whg1", "dxsh"]);
-  if (upperTokens.has(token.toLowerCase())) {
-    return token.toUpperCase();
-  }
-
-  if (/[A-Z]{2,}/.test(token) || /^[0-9]+[A-Za-z0-9]*$/.test(token)) {
-    return token;
-  }
-
-  return token.charAt(0).toUpperCase() + token.slice(1);
+  frameWrap.classList.add("hidden");
+  playerTitle.textContent = "Game unavailable";
+  playerStatus.textContent = "Return to the launcher and pick another game.";
+  playerError.querySelector("p").textContent = message;
 }
 
 async function toggleFullscreen() {
@@ -170,15 +160,13 @@ async function toggleFullscreen() {
 
 function syncFullscreenState() {
   const isFullscreen = document.fullscreenElement === frameWrap;
-  const nextLabel = isFullscreen ? "Exit Fullscreen" : "Fullscreen";
-
-  fullscreenLabel.textContent = nextLabel;
+  fullscreenLabel.textContent = isFullscreen ? "Exit Fullscreen" : "Fullscreen";
   frameWrap.classList.toggle("is-fullscreen", isFullscreen);
 
   if (frameWrap.classList.contains("is-loaded")) {
     playerStatus.textContent = isFullscreen
-      ? "Fullscreen on. Press Enter to exit, or use Homepage."
-      : "Game loaded. Use Fullscreen, Enter exits fullscreen, and Homepage returns you to the hub.";
+      ? "Fullscreen on. Press Enter to step back out."
+      : "Game loaded. Fullscreen is available, and Enter exits fullscreen.";
   }
 }
 
@@ -192,9 +180,4 @@ function handleKeydown(event) {
     event.stopPropagation();
     document.exitFullscreen().catch(() => {});
   }
-}
-
-function startTransition(callback, delay = 220) {
-  document.body.classList.add("is-transitioning");
-  window.setTimeout(callback, delay);
 }

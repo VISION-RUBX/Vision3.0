@@ -1,48 +1,88 @@
-const GAME_DATA_PATH = "./games.json";
-const UPDATES_DATA_PATH = "./updates.json";
-const STORAGE_KEYS = {
-  query: "vision3.launcher.query",
-  scroll: "vision3.launcher.scroll",
-  tab: "vision3.launcher.tab"
-};
-const GAME_NAME_OVERRIDES = {
-  fridaynightfunkingsonicexe: "Friday Night Funkin Exe",
-  idkthegamenamelol: "Tomb Of The Mask",
-  slowp: "Slope",
-  subiceland: "Subway Surfers Iceland",
-  webcomewhatwebehold: "We Become What We Behold",
-  whackyobuss: "Whack Your Boss",
-  whackyurpc: "Whack Your PC",
-  whg1: "Worlds Hardest Game 1"
-};
+import {
+  STORAGE_KEYS,
+  createMusicPlayer,
+  escapeHtml,
+  formatBytes,
+  formatDisplayName,
+  initFocusMode,
+  initParticleField,
+  loadJson,
+  markPageReady,
+  mountMusicDock,
+  startTransition
+} from "./site.js";
 
+const GAME_DATA_PATH = "./games.json";
+const MUSIC_DATA_PATH = "./music.json";
+const UPDATES_DATA_PATH = "./updates.json";
+const CATEGORY_FILTERS = ["all", "popular", "mixed", ...Array.from("ABCDEFGHIJKLMNOPQRSTUVWXYZ")];
+
+const particleCanvas = document.getElementById("particleCanvas");
 const searchInput = document.getElementById("searchInput");
 const clearSearchButton = document.getElementById("clearSearch");
+const focusModeButton = document.getElementById("focusModeButton");
+const statusText = document.getElementById("statusText");
 const loadingState = document.getElementById("loadingState");
 const errorState = document.getElementById("errorState");
 const emptyState = document.getElementById("emptyState");
 const updatesEmptyState = document.getElementById("updatesEmptyState");
+const musicEmptyState = document.getElementById("musicEmptyState");
 const gameGrid = document.getElementById("gameGrid");
 const updatesList = document.getElementById("updatesList");
-const gameCount = document.getElementById("gameCount");
-const resultCount = document.getElementById("resultCount");
-const statusText = document.getElementById("statusText");
+const musicList = document.getElementById("musicList");
+const filterBar = document.getElementById("filterBar");
 const gamesTabCount = document.getElementById("gamesTabCount");
+const musicTabCount = document.getElementById("musicTabCount");
 const updatesTabCount = document.getElementById("updatesTabCount");
-const tabButtons = document.querySelectorAll(".tab-button");
+const totalGamesValue = document.getElementById("totalGamesValue");
+const visibleGamesValue = document.getElementById("visibleGamesValue");
+const musicTracksValue = document.getElementById("musicTracksValue");
 const gamesPanel = document.getElementById("gamesPanel");
+const musicPanel = document.getElementById("musicPanel");
 const updatesPanel = document.getElementById("updatesPanel");
+const tabButtons = [...document.querySelectorAll(".tab-button")];
+const musicDock = document.getElementById("musicDock");
+const featuredTrackName = document.getElementById("featuredTrackName");
+const featuredTrackMeta = document.getElementById("featuredTrackMeta");
+const featuredTrackStatus = document.getElementById("featuredTrackStatus");
 
 let games = [];
+let tracks = [];
 let updates = [];
+let musicController = null;
 let activeTab = sessionStorage.getItem(STORAGE_KEYS.tab) || "games";
+let categoryFilter = sessionStorage.getItem(STORAGE_KEYS.quickFilter) || "all";
+let previousMuteState = null;
+let lastMusicSummaryKey = "";
+let lastMusicListKey = "";
+let lastMusicListStateKey = "";
 
 document.addEventListener("DOMContentLoaded", async () => {
-  requestAnimationFrame(() => {
-    document.body.classList.add("is-ready");
+  markPageReady();
+
+  const focusMode = initFocusMode(focusModeButton);
+  const particles = initParticleField(particleCanvas);
+  focusMode.subscribe(enabled => {
+    particles.setFocusMode(enabled);
+
+    if (!musicController) {
+      return;
+    }
+
+    if (enabled) {
+      previousMuteState = musicController.getState().muted;
+      musicController.setMuted(true);
+      return;
+    }
+
+    if (previousMuteState !== null) {
+      musicController.setMuted(previousMuteState);
+      previousMuteState = null;
+    }
   });
 
   searchInput.value = sessionStorage.getItem(STORAGE_KEYS.query) || "";
+  renderFilterBar();
   wireEvents();
   await loadContent();
 });
@@ -60,76 +100,103 @@ function wireEvents() {
     searchInput.focus();
   });
 
+  filterBar.addEventListener("click", event => {
+    const button = event.target.closest("[data-filter]");
+    if (!button) {
+      return;
+    }
+
+    categoryFilter = button.dataset.filter || "all";
+    sessionStorage.setItem(STORAGE_KEYS.quickFilter, categoryFilter);
+    renderFilterBar();
+    renderActiveTab();
+  });
+
   tabButtons.forEach(button => {
     button.addEventListener("click", () => {
-      setActiveTab(button.dataset.tab);
+      activeTab = button.dataset.tab || "games";
+      sessionStorage.setItem(STORAGE_KEYS.tab, activeTab);
+      renderActiveTab();
     });
   });
 
   gameGrid.addEventListener("click", event => {
-    const card = event.target.closest(".game-card");
-    if (!card) {
+    const link = event.target.closest(".game-card");
+    if (!link) {
       return;
     }
 
-    if (
-      event.button !== 0 ||
-      event.metaKey ||
-      event.ctrlKey ||
-      event.shiftKey ||
-      event.altKey
-    ) {
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) {
       return;
     }
 
     event.preventDefault();
-    sessionStorage.setItem(STORAGE_KEYS.query, searchInput.value);
     sessionStorage.setItem(STORAGE_KEYS.scroll, String(window.scrollY));
     startTransition(() => {
-      window.location.href = card.href;
+      window.location.href = link.href;
     });
+  });
+
+  musicList.addEventListener("click", event => {
+    const button = event.target.closest("[data-track-key]");
+    if (!button || !musicController) {
+      return;
+    }
+
+    void musicController.selectByKey(button.dataset.trackKey, { autoplay: true });
   });
 }
 
 async function loadContent() {
   try {
-    const [gamesResponse, updatesResponse] = await Promise.all([
-      fetch(GAME_DATA_PATH, { cache: "no-store" }),
-      fetch(UPDATES_DATA_PATH, { cache: "no-store" })
+    const [gameData, musicData, updatesData] = await Promise.all([
+      loadJson(GAME_DATA_PATH),
+      loadJson(MUSIC_DATA_PATH),
+      loadJson(UPDATES_DATA_PATH)
     ]);
 
-    if (!gamesResponse.ok) {
-      throw new Error("Unable to fetch games.json");
-    }
+    games = Array.isArray(gameData)
+      ? gameData.map(game => ({
+          ...game,
+          displayName: formatDisplayName(game.name),
+          searchText: `${game.name} ${game.key} ${game.platform} ${game.category}`.toLowerCase()
+        }))
+      : [];
 
-    if (!updatesResponse.ok) {
-      throw new Error("Unable to fetch updates.json");
-    }
+    tracks = Array.isArray(musicData)
+      ? musicData.map(track => ({
+          ...track,
+          displayName: formatDisplayName(track.name),
+          searchText: `${track.name} ${track.key}`.toLowerCase()
+        }))
+      : [];
 
-    const rawGames = await gamesResponse.json();
-    const rawUpdates = await updatesResponse.json();
+    updates = Array.isArray(updatesData)
+      ? updatesData.map((entry, index) => ({
+          id: `${entry.date || "update"}-${index}`,
+          date: entry.date || "",
+          title: entry.title || `Update ${index + 1}`,
+          summary: entry.summary || "",
+          body: Array.isArray(entry.body) ? entry.body : [],
+          notes: Array.isArray(entry.notes) ? entry.notes : []
+        }))
+      : [];
 
-    games = Object.entries(rawGames).map(([key, url], index) => ({
-      key,
-      url,
-      slot: index + 1,
-      name: formatGameName(key, url),
-      initials: createInitials(formatGameName(key, url)),
-      hue: hueFromKey(key)
-    }));
-
-    updates = rawUpdates.map((entry, index) => ({
-      id: `${entry.date || "update"}-${index}`,
-      date: entry.date || "",
-      title: entry.title || `Update ${index + 1}`,
-      summary: entry.summary || "",
-      body: Array.isArray(entry.body) ? entry.body : [],
-      notes: Array.isArray(entry.notes) ? entry.notes : []
-    }));
-
-    gameCount.textContent = String(games.length);
+    totalGamesValue.textContent = String(games.length);
+    visibleGamesValue.textContent = String(games.length);
+    musicTracksValue.textContent = String(tracks.length);
     gamesTabCount.textContent = String(games.length);
+    musicTabCount.textContent = String(tracks.length);
     updatesTabCount.textContent = String(updates.length);
+
+    musicController = createMusicPlayer(tracks);
+    mountMusicDock(musicDock, musicController);
+    musicController.subscribe(handleMusicStateChange);
+    if (document.body.classList.contains("focus-mode")) {
+      previousMuteState = musicController.getState().muted;
+      musicController.setMuted(true);
+    }
+
     loadingState.classList.add("hidden");
     renderActiveTab();
     restoreScroll();
@@ -138,36 +205,16 @@ async function loadContent() {
     loadingState.classList.add("hidden");
     errorState.classList.remove("hidden");
     statusText.textContent = "Launcher data could not be loaded.";
-    gameCount.textContent = "0";
-    gamesTabCount.textContent = "0";
-    updatesTabCount.textContent = "0";
-    resultCount.textContent = "0";
   }
-}
-
-function setActiveTab(tab) {
-  activeTab = tab === "updates" ? "updates" : "games";
-  sessionStorage.setItem(STORAGE_KEYS.tab, activeTab);
-  updateTabUi();
-  renderActiveTab();
-}
-
-function updateTabUi() {
-  const isGamesTab = activeTab === "games";
-
-  tabButtons.forEach(button => {
-    const isActive = button.dataset.tab === activeTab;
-    button.classList.toggle("is-active", isActive);
-    button.setAttribute("aria-selected", String(isActive));
-  });
-
-  gamesPanel.classList.toggle("hidden", !isGamesTab);
-  updatesPanel.classList.toggle("hidden", isGamesTab);
-  searchInput.placeholder = isGamesTab ? "Search games..." : "Search updates...";
 }
 
 function renderActiveTab() {
   updateTabUi();
+
+  if (activeTab === "music") {
+    renderMusic();
+    return;
+  }
 
   if (activeTab === "updates") {
     renderUpdates();
@@ -177,37 +224,102 @@ function renderActiveTab() {
   renderGames();
 }
 
+function updateTabUi() {
+  const gamesView = activeTab === "games";
+  const musicView = activeTab === "music";
+  const updatesView = activeTab === "updates";
+
+  tabButtons.forEach(button => {
+    const isActive = button.dataset.tab === activeTab;
+    button.classList.toggle("is-active", isActive);
+    button.setAttribute("aria-selected", String(isActive));
+  });
+
+  gamesPanel.classList.toggle("hidden", !gamesView);
+  musicPanel.classList.toggle("hidden", !musicView);
+  updatesPanel.classList.toggle("hidden", !updatesView);
+  filterBar.classList.toggle("hidden", !gamesView);
+
+  searchInput.placeholder = gamesView
+    ? `Search ${games.length} games...`
+    : musicView
+      ? `Search ${tracks.length} tracks...`
+      : "Search updates...";
+}
+
 function renderGames() {
   const query = searchInput.value.trim().toLowerCase();
   const filteredGames = games.filter(game => {
+    if (categoryFilter === "popular" && !game.popular) {
+      return false;
+    }
+
+    if (categoryFilter === "mixed" && game.category !== "Mixed") {
+      return false;
+    }
+
+    if (categoryFilter.length === 1 && game.category !== categoryFilter) {
+      return false;
+    }
+
     if (!query) {
       return true;
     }
 
-    return (
-      game.name.toLowerCase().includes(query) ||
-      game.key.toLowerCase().includes(query)
-    );
+    return game.searchText.includes(query);
   });
 
   clearSearchButton.hidden = query.length === 0;
-  resultCount.textContent = String(filteredGames.length);
+  visibleGamesValue.textContent = String(filteredGames.length);
   statusText.textContent = query
-    ? `${filteredGames.length} result${filteredGames.length === 1 ? "" : "s"} for "${searchInput.value.trim()}".`
-    : `${games.length} game${games.length === 1 ? "" : "s"} ready to launch.`;
+    ? `${filteredGames.length} game result${filteredGames.length === 1 ? "" : "s"} for "${searchInput.value.trim()}".`
+    : `${filteredGames.length} validated game${filteredGames.length === 1 ? "" : "s"} ready to launch.`;
 
-  const updateGrid = () => {
-    emptyState.classList.toggle("hidden", filteredGames.length !== 0);
+  const nextMarkup = filteredGames
+    .map((game, index) => createGameCardMarkup(game, index))
+    .join("");
+
+  swapMarkup(gameGrid, nextMarkup, () => {
     gameGrid.classList.toggle("hidden", filteredGames.length === 0);
-    gameGrid.innerHTML = filteredGames.map((game, index) => createGameCardMarkup(game, index)).join("");
-  };
+    emptyState.classList.toggle("hidden", filteredGames.length !== 0);
+    musicEmptyState.classList.add("hidden");
+    updatesEmptyState.classList.add("hidden");
+    updatesList.classList.add("hidden");
+    musicList.classList.add("hidden");
+  });
+}
 
-  if (typeof document.startViewTransition === "function") {
-    document.startViewTransition(updateGrid);
-    return;
+function renderMusic() {
+  const query = searchInput.value.trim().toLowerCase();
+  const filteredTracks = tracks.filter(track => !query || track.searchText.includes(query));
+
+  clearSearchButton.hidden = query.length === 0;
+  statusText.textContent = query
+    ? `${filteredTracks.length} music result${filteredTracks.length === 1 ? "" : "s"} for "${searchInput.value.trim()}".`
+    : `${tracks.length} Canva music track${tracks.length === 1 ? "" : "s"} integrated into Vision 3.0.`;
+
+  const state = musicController?.getState();
+  const signature = `${filteredTracks.map(track => track.key).join("|")}::${state?.activeTrack?.key || ""}::${state?.isPaused}`;
+
+  if (signature !== lastMusicListKey) {
+    const markup = filteredTracks
+      .map((track, index) => createTrackMarkup(track, index, state))
+      .join("");
+
+    swapMarkup(musicList, markup, () => {
+      musicList.classList.toggle("hidden", filteredTracks.length === 0);
+      musicEmptyState.classList.toggle("hidden", filteredTracks.length !== 0);
+      emptyState.classList.add("hidden");
+      updatesEmptyState.classList.add("hidden");
+      gameGrid.classList.add("hidden");
+      updatesList.classList.add("hidden");
+    });
+
+    lastMusicListKey = signature;
+  } else {
+    musicList.classList.toggle("hidden", filteredTracks.length === 0);
+    musicEmptyState.classList.toggle("hidden", filteredTracks.length !== 0);
   }
-
-  updateGrid();
 }
 
 function renderUpdates() {
@@ -217,148 +329,141 @@ function renderUpdates() {
       return true;
     }
 
-    return (
-      update.title.toLowerCase().includes(query) ||
-      update.summary.toLowerCase().includes(query) ||
-      update.body.some(paragraph => paragraph.toLowerCase().includes(query)) ||
-      update.date.toLowerCase().includes(query) ||
-      update.notes.some(note => note.toLowerCase().includes(query))
-    );
+    return [update.title, update.summary, update.date, ...update.body, ...update.notes]
+      .join(" ")
+      .toLowerCase()
+      .includes(query);
   });
 
   clearSearchButton.hidden = query.length === 0;
-  resultCount.textContent = String(filteredUpdates.length);
   statusText.textContent = query
     ? `${filteredUpdates.length} update result${filteredUpdates.length === 1 ? "" : "s"} for "${searchInput.value.trim()}".`
-    : `${updates.length} update${updates.length === 1 ? "" : "s"} posted.`;
+    : `${updates.length} post${updates.length === 1 ? "" : "s"} in updates.`;
 
-  const updateList = () => {
-    emptyState.classList.add("hidden");
-    gameGrid.classList.add("hidden");
-    updatesEmptyState.classList.toggle("hidden", filteredUpdates.length !== 0);
+  const markup = filteredUpdates.map((update, index) => createUpdateMarkup(update, index)).join("");
+
+  swapMarkup(updatesList, markup, () => {
     updatesList.classList.toggle("hidden", filteredUpdates.length === 0);
-    updatesList.innerHTML = filteredUpdates.map((update, index) => createUpdateMarkup(update, index)).join("");
-  };
+    updatesEmptyState.classList.toggle("hidden", filteredUpdates.length !== 0);
+    emptyState.classList.add("hidden");
+    musicEmptyState.classList.add("hidden");
+    gameGrid.classList.add("hidden");
+    musicList.classList.add("hidden");
+  });
+}
 
-  if (typeof document.startViewTransition === "function") {
-    document.startViewTransition(updateList);
-    return;
+function handleMusicStateChange(state) {
+  const track = state.activeTrack;
+  const summaryKey = `${track?.key || ""}::${state.isPaused}::${state.isLoading}::${state.errorMessage}`;
+  if (summaryKey !== lastMusicSummaryKey) {
+    featuredTrackName.textContent = track ? track.displayName : "No track selected";
+    featuredTrackMeta.textContent = track ? `${formatBytes(track.size)} ${track.contentType ? `• ${track.contentType.replace("audio/", "").toUpperCase()}` : ""}`.trim() : "Playlist offline";
+    featuredTrackStatus.textContent = state.errorMessage || (state.isLoading ? "Loading track..." : state.isPaused ? "Ready to play" : "Now playing");
+    lastMusicSummaryKey = summaryKey;
   }
 
-  updateList();
+  if (activeTab === "music") {
+    const listStateKey = `${track?.key || ""}::${state.isPaused}::${state.isLoading}`;
+    if (listStateKey !== lastMusicListStateKey) {
+      lastMusicListKey = "";
+      lastMusicListStateKey = listStateKey;
+      renderMusic();
+    }
+  }
+}
+
+function renderFilterBar() {
+  filterBar.innerHTML = CATEGORY_FILTERS.map(filter => {
+    const isActive = filter === categoryFilter;
+    const label = filter === "all"
+      ? "All"
+      : filter === "popular"
+        ? "Popular"
+        : filter === "mixed"
+          ? "Mixed"
+          : filter;
+
+    return `
+      <button
+        class="filter-chip${isActive ? " is-active" : ""}"
+        type="button"
+        data-filter="${filter}"
+        aria-pressed="${String(isActive)}"
+      >
+        ${escapeHtml(label)}
+      </button>
+    `;
+  }).join("");
 }
 
 function createGameCardMarkup(game, index) {
   return `
     <a
-      class="game-card game-card-text"
+      class="game-card"
       href="play.html?game=${encodeURIComponent(game.key)}"
-      style="--stagger:${index};"
-      aria-label="Open ${escapeHtml(game.name)}"
-      title="${escapeHtml(game.name)}"
+      style="--stagger:${Math.min(index, 24)};"
+      aria-label="Open ${escapeHtml(game.displayName)}"
     >
-      <div class="game-card-body game-card-body-text">
-        <h2>${escapeHtml(game.name)}</h2>
+      <div class="card-tags">
+        <span class="pill">${escapeHtml(game.platform || "Web")}</span>
+        ${game.popular ? '<span class="pill pill-strong">Popular</span>' : ""}
       </div>
+      <h2>${escapeHtml(game.displayName)}</h2>
+      <p>${escapeHtml(game.category === "Mixed" ? "Mixed / Featured" : `Category ${game.category}`)}</p>
     </a>
+  `;
+}
+
+function createTrackMarkup(track, index, state) {
+  const isActive = state?.activeTrack?.key === track.key;
+  const status = state?.isLoading && isActive ? "Loading" : isActive ? (state.isPaused ? "Paused" : "Playing") : "Ready";
+
+  return `
+    <button
+      class="track-row${isActive ? " is-active" : ""}"
+      type="button"
+      data-track-key="${escapeHtml(track.key)}"
+    >
+      <span class="track-row-index">${String(index + 1).padStart(2, "0")}</span>
+      <span class="track-row-main">
+        <strong>${escapeHtml(track.displayName)}</strong>
+        <small>${escapeHtml(formatBytes(track.size) || "Drive audio")}</small>
+      </span>
+      <span class="track-row-state">${escapeHtml(status)}</span>
+    </button>
   `;
 }
 
 function createUpdateMarkup(update, index) {
   const bodyMarkup = update.body
-    .map(paragraph => `<p class="update-paragraph">${escapeHtml(paragraph)}</p>`)
-    .join("");
-
-  const notesMarkup = update.notes
-    .map(note => `<li>${escapeHtml(note)}</li>`)
+    .map(paragraph => `<p class="update-copy">${escapeHtml(paragraph)}</p>`)
     .join("");
 
   return `
-    <article class="update-card" style="--stagger:${index};">
-      <div class="update-topline">
-        <p class="update-date">${escapeHtml(formatDate(update.date))}</p>
-        <span class="slot-pill">Update ${String(index + 1).padStart(2, "0")}</span>
+    <article class="update-card" style="--stagger:${Math.min(index, 12)};">
+      <div class="card-tags">
+        <span class="pill">Update ${String(index + 1).padStart(2, "0")}</span>
+        ${update.date ? `<span class="pill">${escapeHtml(update.date)}</span>` : ""}
       </div>
       <h2>${escapeHtml(update.title)}</h2>
-      <p class="update-summary">${escapeHtml(update.summary)}</p>
+      <p class="update-copy">${escapeHtml(update.summary)}</p>
       ${bodyMarkup}
-      ${notesMarkup ? `<ul class="update-notes">${notesMarkup}</ul>` : ""}
     </article>
   `;
 }
 
-function formatGameName(key, url) {
-  if (GAME_NAME_OVERRIDES[key]) {
-    return GAME_NAME_OVERRIDES[key];
+function swapMarkup(target, markup, finalize) {
+  const apply = () => {
+    target.innerHTML = markup;
+    finalize();
+  };
+
+  if (typeof document.startViewTransition === "function") {
+    document.startViewTransition(apply);
+    return;
   }
 
-  let slug = key;
-
-  try {
-    const parsed = new URL(url);
-    const parts = parsed.pathname.split("/").filter(Boolean);
-    if (parts.length > 0) {
-      slug = parts[parts.length - 1];
-    }
-  } catch (error) {
-    slug = key;
-  }
-
-  return slug
-    .replace(/[-_]+/g, " ")
-    .replace(/\s+/g, " ")
-    .trim()
-    .split(" ")
-    .map(token => formatToken(token))
-    .join(" ");
-}
-
-function formatToken(token) {
-  if (!token) {
-    return token;
-  }
-
-  const upperTokens = new Set(["fnaf", "csgo", "lol", "io", "whg1", "dxsh"]);
-  if (upperTokens.has(token.toLowerCase())) {
-    return token.toUpperCase();
-  }
-
-  if (/[A-Z]{2,}/.test(token) || /^[0-9]+[A-Za-z0-9]*$/.test(token)) {
-    return token;
-  }
-
-  return token.charAt(0).toUpperCase() + token.slice(1);
-}
-
-function createInitials(name) {
-  const words = name.split(" ").filter(Boolean);
-  if (words.length >= 2) {
-    return `${words[0][0] || ""}${words[1][0] || ""}`.toUpperCase();
-  }
-
-  return name.replace(/[^A-Za-z0-9]/g, "").slice(0, 2).toUpperCase() || "GG";
-}
-
-function hueFromKey(key) {
-  const hash = Array.from(key).reduce((sum, char, index) => sum + char.charCodeAt(0) * (index + 3), 0);
-  return 170 + (hash % 110);
-}
-
-function formatDate(value) {
-  if (!value) {
-    return "Recent update";
-  }
-
-  const parsed = new Date(`${value}T00:00:00`);
-  if (Number.isNaN(parsed.getTime())) {
-    return value;
-  }
-
-  return parsed.toLocaleDateString(undefined, {
-    year: "numeric",
-    month: "short",
-    day: "numeric"
-  });
+  apply();
 }
 
 function restoreScroll() {
@@ -370,18 +475,4 @@ function restoreScroll() {
   requestAnimationFrame(() => {
     window.scrollTo({ top: savedScroll, behavior: "auto" });
   });
-}
-
-function startTransition(callback) {
-  document.body.classList.add("is-transitioning");
-  window.setTimeout(callback, 220);
-}
-
-function escapeHtml(value) {
-  return value
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
 }

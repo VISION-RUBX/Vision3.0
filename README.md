@@ -1,51 +1,85 @@
 # Vision 3.0
 
-Static GitHub Pages game launcher built from `games.json`.
+GitHub Pages launcher for validated games, local music playback, and updates.
 
-## Files
+## Main files
 
-- `index.html`: launcher hub
-- `play.html`: fullscreen game loader
-- `games.json`: all game keys and URLs
-- `updates.json`: update posts for the updates tab
-- `styles.css`: shared UI styling and animations
-- `app.js`: dynamic card generation and search
-- `play.js`: iframe loader and back transition
+- `index.html`: launcher homepage
+- `play.html`: game player page
+- `games.json`: validated game manifest
+- `music.json`: local music manifest
+- `updates.json`: update posts
+- `app.js`: homepage logic
+- `play.js`: player logic
+- `site.js`: shared focus mode, particles, transitions, and music dock
+- `styles.css`: shared UI styling
+- `games/`: local validated game files
+- `music/`: local audio files pulled from the Canva page
+- `scripts/build-manifests.mjs`: rebuilds `games.json`, `music.json`, `games/`, and `music/`
 
 ## Daily updates
 
-1. Open `games.json` to change the launcher games.
-2. Open `updates.json` to add daily update posts.
-3. Keep game keys lowercase with underscores.
-4. Commit and push the repo to GitHub.
-5. GitHub Pages will serve the updated launcher.
+For normal content updates:
 
-Example entry:
+1. Edit `updates.json` to change the Updates tab.
+2. Commit and push.
 
-```json
-"basketball_stars": "https://vision-rubx.github.io/BASKETBALL_STARS/"
+For music or game source rebuilds:
+
+1. Run:
+
+```powershell
+node .\scripts\build-manifests.mjs
 ```
 
-Example update:
+2. This refreshes:
+   - `games.json`
+   - `music.json`
+   - `games/`
+   - `music/`
+   - `build-report.json`
+3. Commit and push.
+
+## Manifest shapes
+
+`games.json` uses an array:
 
 ```json
-{
-  "date": "2026-04-27",
-  "title": "New Games Added",
-  "summary": "Added more launcher entries and cleaned up the home page.",
-  "notes": [
-    "Updated games.json",
-    "Adjusted the search and tab layout"
-  ]
-}
+[
+  {
+    "key": "99_balls",
+    "name": "99 balls",
+    "category": "Mixed",
+    "platform": "Web",
+    "popular": true,
+    "order": 5,
+    "fileId": "1wDO0ksBgJdb4PVn7GzaAtwJDpkoS3Es4",
+    "sourceUrl": "https://drive.google.com/file/d/1wDO0ksBgJdb4PVn7GzaAtwJDpkoS3Es4/view?usp=drive_link",
+    "path": "./games/99_balls.html"
+  }
+]
+```
+
+`music.json` uses an array:
+
+```json
+[
+  {
+    "key": "adapt_vision2",
+    "name": "Adapt VISION2",
+    "path": "./music/adapt_vision2.mp3"
+  }
+]
 ```
 
 ## Local preview
 
-Run a simple static server from the repo root:
+Run a static server from the repo root:
 
 ```powershell
 python -m http.server 4173
 ```
 
-Then open `http://localhost:4173/`.
+Then open:
+
+`http://127.0.0.1:4173/`

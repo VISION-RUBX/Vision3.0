@@ -3,131 +3,170 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#040404">
-  <title>Vision 3.0 Launcher</title>
+  <meta name="theme-color" content="#050505">
+  <title>Vision 3.0</title>
   <link rel="stylesheet" href="./styles.css">
-  <script src="./app.js" defer></script>
+  <script type="module" src="./app.js" defer></script>
 </head>
 <body class="page page-index">
+  <canvas id="particleCanvas" class="particle-canvas" aria-hidden="true"></canvas>
   <div class="page-transition" aria-hidden="true"></div>
 
   <div class="page-shell">
     <header class="topbar">
       <div class="brand-block">
-        <p class="eyebrow">GitHub Pages Game Launcher</p>
-        <h1>Vision 3.0</h1>
+        <p class="eyebrow">Vision 3.0</p>
+        <h1>For whoever finds it</h1>
         <p class="intro-copy">
-          For whoever finds it
+          Games, music, and updates rebuilt into one cleaner launcher.
         </p>
       </div>
 
-      <label class="search-shell" for="searchInput">
-        <span class="search-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" role="img" aria-hidden="true">
-            <path d="M10.5 4a6.5 6.5 0 1 0 4.18 11.48l4.91 4.92 1.41-1.42-4.91-4.91A6.5 6.5 0 0 0 10.5 4Zm0 2a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9Z"></path>
-          </svg>
-        </span>
-        <input
-          id="searchInput"
-          class="search-input"
-          type="search"
-          placeholder="Search games..."
-          autocomplete="off"
-          spellcheck="false"
-        >
-      </label>
-    </header>
+      <div class="topbar-tools">
+        <label class="search-shell" for="searchInput">
+          <span class="search-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" role="img" aria-hidden="true">
+              <path d="M10.5 4a6.5 6.5 0 1 0 4.18 11.48l4.91 4.92 1.41-1.42-4.91-4.91A6.5 6.5 0 0 0 10.5 4Zm0 2a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9Z"></path>
+            </svg>
+          </span>
+          <input
+            id="searchInput"
+            class="search-input"
+            type="search"
+            placeholder="Search..."
+            autocomplete="off"
+            spellcheck="false"
+          >
+        </label>
 
-    <section class="hero-band" aria-label="Launcher overview">
-      <div class="hero-metrics">
-        <div class="metric">
-          <span class="metric-label">Games Loaded</span>
-          <strong id="gameCount">0</strong>
-        </div>
-        <div class="metric">
-          <span class="metric-label">Results Shown</span>
-          <strong id="resultCount">0</strong>
+        <div class="header-actions">
+          <button id="focusModeButton" class="ghost-button" type="button" aria-pressed="false">
+            <span data-focus-label>Focus Mode</span>
+          </button>
         </div>
       </div>
+    </header>
+
+    <section class="utility-band" aria-label="Launcher overview">
+      <div class="stats-grid">
+        <article class="stat-card">
+          <span class="stat-label">Validated Games</span>
+          <strong id="totalGamesValue">0</strong>
+        </article>
+        <article class="stat-card">
+          <span class="stat-label">Visible Now</span>
+          <strong id="visibleGamesValue">0</strong>
+        </article>
+        <article class="stat-card">
+          <span class="stat-label">Music Tracks</span>
+          <strong id="musicTracksValue">0</strong>
+        </article>
+      </div>
+
+      <aside class="request-panel">
+        <p class="request-copy">Need something added?</p>
+        <div class="request-actions">
+          <a class="ghost-button" href="https://forms.gle/Krq62fJo7pZ1zXn76" target="_blank" rel="noreferrer">Request Game</a>
+          <a class="ghost-button" href="https://docs.google.com/forms/d/e/1FAIpQLScHAYvj9j1soK5q5A3zk-YH9Jgsadpuv39W3GNm6ybqSELcxg/viewform?usp=dialog" target="_blank" rel="noreferrer">Request Music</a>
+        </div>
+      </aside>
     </section>
 
     <section class="tab-bar" aria-label="Launcher sections">
       <div class="tab-shell" role="tablist" aria-label="Launcher tabs">
-        <button
-          id="gamesTab"
-          class="tab-button is-active"
-          type="button"
-          role="tab"
-          aria-selected="true"
-          aria-controls="gamesPanel"
-          data-tab="games"
-        >
+        <button id="gamesTab" class="tab-button is-active" type="button" role="tab" aria-selected="true" aria-controls="gamesPanel" data-tab="games">
           <span>Games</span>
           <strong id="gamesTabCount">0</strong>
         </button>
-
-        <button
-          id="updatesTab"
-          class="tab-button"
-          type="button"
-          role="tab"
-          aria-selected="false"
-          aria-controls="updatesPanel"
-          data-tab="updates"
-        >
+        <button id="musicTab" class="tab-button" type="button" role="tab" aria-selected="false" aria-controls="musicPanel" data-tab="music">
+          <span>Music</span>
+          <strong id="musicTabCount">0</strong>
+        </button>
+        <button id="updatesTab" class="tab-button" type="button" role="tab" aria-selected="false" aria-controls="updatesPanel" data-tab="updates">
           <span>Updates</span>
           <strong id="updatesTabCount">0</strong>
         </button>
       </div>
     </section>
 
+    <section id="filterBar" class="filter-bar" aria-label="Game categories"></section>
+
     <section class="results-bar" aria-label="Search results">
-      <p id="statusText" class="status-text">Loading games...</p>
+      <p id="statusText" class="status-text">Loading launcher data...</p>
       <button id="clearSearch" class="ghost-button" type="button" hidden>Clear</button>
     </section>
 
     <main class="launcher-main">
       <div id="loadingState" class="state-block">
-        <h2>Loading launcher...</h2>
-        <p>Pulling games from <code>games.json</code>.</p>
+        <h2>Loading Vision 3.0...</h2>
+        <p>Building games, music, and updates from local JSON files.</p>
       </div>
 
       <div id="errorState" class="state-block hidden" role="alert">
-        <h2>Could not load games</h2>
-        <p>
-          Make sure <code>games.json</code> exists in this repo and contains valid
-          JSON with game keys and URLs.
-        </p>
+        <h2>Content could not be loaded</h2>
+        <p>Check that <code>games.json</code>, <code>music.json</code>, and <code>updates.json</code> are present and valid.</p>
       </div>
 
       <div id="emptyState" class="state-block hidden" aria-live="polite">
-        <h2>No matching games</h2>
-        <p>Try a shorter search or clear the current filter.</p>
+        <h2>No games matched</h2>
+        <p>Try a different search or switch to another category.</p>
       </div>
 
-      <section
-        id="gamesPanel"
-        class="content-panel"
-        role="tabpanel"
-        aria-labelledby="gamesTab"
-      >
+      <div id="musicEmptyState" class="state-block hidden" aria-live="polite">
+        <h2>No tracks matched</h2>
+        <p>Try a different search and the playlist will update right away.</p>
+      </div>
+
+      <div id="updatesEmptyState" class="state-block hidden" aria-live="polite">
+        <h2>No updates matched</h2>
+        <p>Try a different search term.</p>
+      </div>
+
+      <section id="gamesPanel" class="content-panel" role="tabpanel" aria-labelledby="gamesTab">
         <section id="gameGrid" class="game-grid hidden" aria-live="polite"></section>
       </section>
 
-      <section
-        id="updatesPanel"
-        class="content-panel hidden"
-        role="tabpanel"
-        aria-labelledby="updatesTab"
-      >
-        <div id="updatesEmptyState" class="state-block hidden" aria-live="polite">
-          <h2>No matching updates</h2>
-          <p>Try a different search or add a new item to <code>updates.json</code>.</p>
-        </div>
+      <section id="musicPanel" class="content-panel hidden" role="tabpanel" aria-labelledby="musicTab">
+        <section class="music-feature">
+          <div>
+            <p class="eyebrow">Canva Music</p>
+            <h2 id="featuredTrackName">Loading tracks...</h2>
+            <p id="featuredTrackMeta" class="panel-copy">Fetching playlist details.</p>
+          </div>
+          <p id="featuredTrackStatus" class="status-text">Preparing player...</p>
+        </section>
 
+        <section id="musicList" class="music-list hidden" aria-live="polite"></section>
+      </section>
+
+      <section id="updatesPanel" class="content-panel hidden" role="tabpanel" aria-labelledby="updatesTab">
         <section id="updatesList" class="updates-list hidden" aria-live="polite"></section>
       </section>
     </main>
   </div>
+
+  <section id="musicDock" class="music-dock hidden" aria-label="Music player">
+    <div class="music-dock-main">
+      <div class="music-dock-copy">
+        <p class="eyebrow">Vision Music</p>
+        <h2 data-track-title>Loading playlist...</h2>
+        <p data-track-meta class="panel-copy">Pulling audio from the Canva archive.</p>
+      </div>
+
+      <div class="music-dock-controls">
+        <button type="button" class="control-button" data-music-prev>Prev</button>
+        <button type="button" class="control-button control-button-strong" data-music-play>Play</button>
+        <button type="button" class="control-button" data-music-next>Next</button>
+        <button type="button" class="control-button" data-music-mute>Mute</button>
+      </div>
+    </div>
+
+    <div class="music-dock-bottom">
+      <span data-track-time>0:00</span>
+      <input type="range" min="0" max="1" step="0.01" value="0" data-music-seek aria-label="Track progress">
+      <span data-track-duration>0:00</span>
+      <input class="volume-slider" type="range" min="0" max="1" step="0.01" value="0.72" data-music-volume aria-label="Volume">
+    </div>
+  </section>
 </body>
 </html>
