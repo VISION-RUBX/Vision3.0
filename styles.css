@@ -112,6 +112,7 @@ body.is-transitioning .player-shell {
 .tab-shell,
 .filter-bar,
 .request-panel,
+.flag-panel,
 .stat-card,
 .game-card,
 .track-row,
@@ -130,6 +131,7 @@ body.is-transitioning .player-shell {
 .performance-mode .tab-shell,
 .performance-mode .filter-bar,
 .performance-mode .request-panel,
+.performance-mode .flag-panel,
 .performance-mode .stat-card,
 .performance-mode .game-card,
 .performance-mode .track-row,
@@ -297,6 +299,15 @@ body.is-transitioning .player-shell {
   border-color: rgba(255, 255, 255, 0.24);
 }
 
+.ghost-button:disabled,
+.back-button:disabled,
+.control-button:disabled {
+  opacity: 0.62;
+  cursor: default;
+  transform: none;
+  box-shadow: none;
+}
+
 .utility-band {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(300px, 360px);
@@ -314,6 +325,7 @@ body.is-transitioning .player-shell {
 .request-panel,
 .music-feature,
 .state-block,
+.flag-panel,
 .update-card,
 .frame-wrap,
 .music-dock {
@@ -337,6 +349,60 @@ body.is-transitioning .player-shell {
   display: grid;
   gap: 14px;
   padding: 20px;
+}
+
+.visitor-band {
+  margin-top: 18px;
+}
+
+.flag-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 24px;
+  align-items: end;
+  padding: 22px 24px;
+}
+
+.flag-panel h2 {
+  margin: 0;
+  font-size: clamp(1.35rem, 2.8vw, 1.8rem);
+  line-height: 1.02;
+}
+
+.flag-copy {
+  display: grid;
+  gap: 10px;
+}
+
+.flag-side,
+.flag-actions {
+  display: grid;
+  gap: 12px;
+  justify-items: end;
+}
+
+.flag-count-shell {
+  display: grid;
+  gap: 6px;
+  justify-items: end;
+  text-align: right;
+}
+
+.flag-count-shell strong {
+  display: block;
+  font-size: clamp(2rem, 5vw, 3rem);
+  line-height: 0.95;
+}
+
+.flag-button {
+  min-width: 160px;
+}
+
+.flag-status {
+  margin: 0;
+  color: var(--text-dim);
+  line-height: 1.5;
+  text-align: right;
 }
 
 .request-copy {
@@ -821,6 +887,7 @@ input[type="range"] {
 }
 
 .focus-mode .utility-band,
+.focus-mode .visitor-band,
 .focus-mode .request-panel,
 .focus-mode .intro-copy,
 .focus-mode .status-text,
@@ -876,6 +943,11 @@ code {
   .stats-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
+
+  .flag-panel {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
 }
 
 @media (max-width: 760px) {
@@ -899,6 +971,22 @@ code {
 
   .stats-grid {
     grid-template-columns: 1fr;
+  }
+
+  .flag-panel,
+  .request-panel {
+    padding: 20px;
+  }
+
+  .flag-side,
+  .flag-actions,
+  .flag-count-shell {
+    justify-items: stretch;
+    text-align: left;
+  }
+
+  .flag-button {
+    width: 100%;
   }
 
   .tab-shell,

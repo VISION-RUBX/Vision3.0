@@ -12,12 +12,23 @@ import {
   loadJson,
   markPageReady,
   mountMusicDock
-} from "./site.js?v=20260511-smooth-launch";
+} from "./site.js?v=20260511-flag-marker";
 
-const GAME_DATA_PATH = "./games.json?v=20260511-smooth-launch";
-const MUSIC_DATA_PATH = "./music.json?v=20260511-smooth-launch";
-const UPDATES_DATA_PATH = "./updates.json?v=20260511-smooth-launch";
+const GAME_DATA_PATH = "./games.json?v=20260511-flag-marker";
+const MUSIC_DATA_PATH = "./music.json?v=20260511-flag-marker";
+const UPDATES_DATA_PATH = "./updates.json?v=20260511-flag-marker";
 const CATEGORY_FILTERS = ["all", "popular", "mixed", ...Array.from("ABCDEFGHIJKLMNOPQRSTUVWXYZ")];
+const FLAG_COUNTER_API = "https://api.countapi.xyz";
+const FLAG_COUNTERS = {
+  production: {
+    namespace: "vision-rubx.github.io",
+    key: "vision3-flags-v1"
+  },
+  development: {
+    namespace: "vision-rubx.github.io-dev",
+    key: "vision3-flags-v1"
+  }
+};
 
 const particleCanvas = document.getElementById("particleCanvas");
 const searchInput = document.getElementById("searchInput");
@@ -50,6 +61,10 @@ const featuredTrackName = document.getElementById("featuredTrackName");
 const featuredTrackMeta = document.getElementById("featuredTrackMeta");
 const featuredTrackStatus = document.getElementById("featuredTrackStatus");
 const toggleMusicList = document.getElementById("toggleMusicList");
+const leaveFlagButton = document.getElementById("leaveFlagButton");
+const flagCountValue = document.getElementById("flagCountValue");
+const flagSummary = document.getElementById("flagSummary");
+const flagStatus = document.getElementById("flagStatus");
 
 let games = [];
 let tracks = [];
@@ -65,6 +80,15 @@ let musicListCollapsed = sessionStorage.getItem(STORAGE_KEYS.musicListCollapsed)
 let gamePageSize = 96;
 let visibleGameLimit = gamePageSize;
 let pendingSearchFrame = 0;
+let flagState = {
+  count: null,
+  hasFlag: localStorage.getItem(STORAGE_KEYS.flagLeft) === "true",
+  isLoading: true,
+  isSubmitting: false,
+  errorMessage: ""
+};
+
+const countFormatter = new Intl.NumberFormat();
 
 function updateMusicListToggle() {
   if (!toggleMusicList) {
@@ -107,6 +131,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   searchInput.value = sessionStorage.getItem(STORAGE_KEYS.query) || "";
   renderFilterBar();
   wireEvents();
+  updateFlagUi();
+  void loadFlagCounter();
   await loadContent();
 });
 
@@ -179,6 +205,10 @@ function wireEvents() {
   });
 
   updateMusicListToggle();
+
+  leaveFlagButton?.addEventListener("click", () => {
+    void submitFlag();
+  });
 
   gameGrid.addEventListener("click", event => {
     const link = event.target.closest(".game-card");
@@ -570,4 +600,139 @@ function restoreScroll() {
   requestAnimationFrame(() => {
     window.scrollTo({ top: savedScroll, behavior: "auto" });
   });
+}
+
+function getFlagCounterConfig() {
+  return window.location.hostname === "vision-rubx.github.io"
+    ? FLAG_COUNTERS.production
+    : FLAG_COUNTERS.development;
+}
+
+function getFlagCounterUrl(action) {
+  const { namespace, key } = getFlagCounterConfig();
+  return `${FLAG_COUNTER_API}/${action}/${encodeURIComponent(namespace)}/${encodeURIComponent(key)}`;
+}
+
+async function requestFlagCount(action) {
+  const response = await fetch(getFlagCounterUrl(action), {
+    cache: "no-store"
+  });
+
+  if (action === "get" && response.status === 404) {
+    return 0;
+  }
+
+  if (!response.ok) {
+    throw new Error(`Flag counter request failed with ${response.status}`);
+  }
+
+  const payload = await response.json();
+  if (!Number.isFinite(payload?.value)) {
+    throw new Error("Flag counter did not return a numeric value.");
+  }
+
+  return payload.value;
+}
+
+async function loadFlagCounter() {
+  flagState = {
+    ...flagState,
+    isLoading: true,
+    errorMessage: ""
+  };
+  updateFlagUi();
+
+  try {
+    const count = await requestFlagCount("get");
+    flagState = {
+      ...flagState,
+      count,
+      isLoading: false,
+      errorMessage: ""
+    };
+  } catch (error) {
+    console.error(error);
+    flagState = {
+      ...flagState,
+      isLoading: false,
+      errorMessage: "Flag counter is offline right now."
+    };
+  }
+
+  updateFlagUi();
+}
+
+async function submitFlag() {
+  if (flagState.hasFlag || flagState.isSubmitting) {
+    return;
+  }
+
+  flagState = {
+    ...flagState,
+    isSubmitting: true,
+    errorMessage: ""
+  };
+  updateFlagUi();
+
+  try {
+    const count = await requestFlagCount("hit");
+    localStorage.setItem(STORAGE_KEYS.flagLeft, "true");
+    flagState = {
+      ...flagState,
+      count,
+      hasFlag: true,
+      isSubmitting: false,
+      isLoading: false,
+      errorMessage: ""
+    };
+  } catch (error) {
+    console.error(error);
+    flagState = {
+      ...flagState,
+      isSubmitting: false,
+      isLoading: false,
+      errorMessage: "Could not save your flag yet. Try again in a moment."
+    };
+  }
+
+  updateFlagUi();
+}
+
+function updateFlagUi() {
+  if (!flagCountValue || !flagSummary || !flagStatus || !leaveFlagButton) {
+    return;
+  }
+
+  const countText = Number.isFinite(flagState.count)
+    ? countFormatter.format(flagState.count)
+    : "--";
+  const count = Number.isFinite(flagState.count) ? flagState.count : 0;
+  const peopleLabel = `${countFormatter.format(count)} ${count === 1 ? "person has" : "people have"} left a flag so far.`;
+
+  flagCountValue.textContent = countText;
+  leaveFlagButton.disabled = flagState.hasFlag || flagState.isSubmitting;
+  leaveFlagButton.textContent = flagState.isSubmitting
+    ? "Saving..."
+    : flagState.hasFlag
+      ? "Flag Left"
+      : "Leave a Flag";
+
+  if (flagState.isLoading) {
+    flagSummary.textContent = "Checking how many flags have been left.";
+    flagStatus.textContent = flagState.hasFlag ? "Your browser already has a saved flag." : "One press per browser.";
+    return;
+  }
+
+  if (flagState.errorMessage) {
+    flagSummary.textContent = Number.isFinite(flagState.count)
+      ? peopleLabel
+      : "The shared flag counter is offline right now.";
+    flagStatus.textContent = flagState.errorMessage;
+    return;
+  }
+
+  flagSummary.textContent = peopleLabel;
+  flagStatus.textContent = flagState.hasFlag
+    ? "Your flag is already saved on this browser."
+    : "Tap once to add your mark to the counter.";
 }

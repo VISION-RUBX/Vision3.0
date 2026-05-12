@@ -9,10 +9,11 @@ export const STORAGE_KEYS = {
   musicListCollapsed: "vision3.musicListCollapsed",
   buildVersion: "vision3.buildVersion",
   musicDockCollapsed: "vision3.musicDockCollapsed",
-  musicDockHidden: "vision3.musicDockHidden"
+  musicDockHidden: "vision3.musicDockHidden",
+  flagLeft: "vision3.flagLeft"
 };
 
-export const APP_VERSION = "20260511-smooth-launch";
+export const APP_VERSION = "20260511-flag-marker";
 
 const TITLE_SMALL_WORDS = new Set(["a", "an", "and", "as", "at", "by", "for", "in", "of", "on", "or", "the", "to", "vs"]);
 const UPPERCASE_TOKENS = new Set(["gba", "n64", "nfl", "nba", "nhl", "fnaf", "fps", "rpg", "btd", "csgo", "bas", "c.s"]);

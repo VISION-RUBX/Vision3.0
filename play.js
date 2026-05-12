@@ -6,9 +6,9 @@ import {
   loadJson,
   markPageReady,
   startTransition
-} from "./site.js?v=20260511-smooth-launch";
+} from "./site.js?v=20260511-flag-marker";
 
-const GAME_DATA_PATH = "./games.json?v=20260511-smooth-launch";
+const GAME_DATA_PATH = "./games.json?v=20260511-flag-marker";
 
 const particleCanvas = document.getElementById("particleCanvas");
 const homepageButton = document.getElementById("homepageButton");

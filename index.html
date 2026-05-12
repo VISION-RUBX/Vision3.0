@@ -7,7 +7,7 @@
   <title>Vision</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23050505'/%3E%3Cpath d='M17 16h10l5 22 5-22h10L36 48h-8z' fill='%23f6f6f6'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="./styles.css">
-  <script type="module" src="./app.js?v=20260511-smooth-launch" defer></script>
+  <script type="module" src="./app.js?v=20260511-flag-marker" defer></script>
 </head>
 <body class="page page-index">
   <canvas id="particleCanvas" class="particle-canvas" aria-hidden="true"></canvas>
@@ -71,6 +71,28 @@
           <a class="ghost-button" href="https://docs.google.com/forms/d/e/1FAIpQLScHAYvj9j1soK5q5A3zk-YH9Jgsadpuv39W3GNm6ybqSELcxg/viewform?usp=dialog" target="_blank" rel="noreferrer">Request Music</a>
         </div>
       </aside>
+    </section>
+
+    <section class="visitor-band" aria-label="Visitor marker">
+      <article class="flag-panel">
+        <div class="flag-copy">
+          <p class="eyebrow">Leave A Flag</p>
+          <h2>Mark that you were here</h2>
+          <p id="flagSummary" class="panel-copy">Checking how many flags have been left.</p>
+        </div>
+
+        <div class="flag-side">
+          <div class="flag-count-shell" aria-live="polite">
+            <span class="stat-label">Flags Left</span>
+            <strong id="flagCountValue">--</strong>
+          </div>
+
+          <div class="flag-actions">
+            <button id="leaveFlagButton" class="ghost-button flag-button" type="button">Leave a Flag</button>
+            <p id="flagStatus" class="flag-status">One press per browser.</p>
+          </div>
+        </div>
+      </article>
     </section>
 
     <section class="tab-bar" aria-label="Launcher sections">
