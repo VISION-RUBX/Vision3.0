@@ -1,14 +1,5 @@
 ﻿[
     {
-        "key":  "tuff",
-        "name":  "Tuff",
-        "category":  "T",
-        "platform":  "Web",
-        "popular":  false,
-        "order":  1,
-        "path":  "./games/tuff.html"
-    },
-    {
         "key":  "1",
         "name":  "1",
         "category":  "Mixed",

@@ -558,6 +558,17 @@ body.is-transitioning .player-shell {
   line-height: 1.65;
 }
 
+.update-notes {
+  margin: 2px 0 0;
+  padding-left: 18px;
+  color: var(--text-soft);
+  line-height: 1.65;
+}
+
+.update-notes li + li {
+  margin-top: 6px;
+}
+
 .card-tags {
   display: flex;
   flex-wrap: wrap;

@@ -522,6 +522,13 @@ function createTrackMarkup(track, index, state) {
 }
 
 function createUpdateMarkup(update, index) {
+  const notesMarkup = update.notes.length
+    ? `
+      <ul class="update-notes">
+        ${update.notes.map(note => `<li>${escapeHtml(note)}</li>`).join("")}
+      </ul>
+    `
+    : "";
   const bodyMarkup = update.body
     .map(paragraph => `<p class="update-copy">${escapeHtml(paragraph)}</p>`)
     .join("");
@@ -534,6 +541,7 @@ function createUpdateMarkup(update, index) {
       </div>
       <h2>${escapeHtml(update.title)}</h2>
       <p class="update-copy">${escapeHtml(update.summary)}</p>
+      ${notesMarkup}
       ${bodyMarkup}
     </article>
   `;
