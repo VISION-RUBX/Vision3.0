@@ -1,9 +1,4 @@
-<!DOCTYPE html>
-<!-- Ultimate Game Stash file--> 
-<!-- For the regularly updating doc go to https://docs.google.com/document/d/1_FmH3BlSBQI7FGgAQL59-ZPe8eCxs35wel6JUyVaG8Q/ -->
-
-
-
+﻿<!DOCTYPE html>
 <!DOCTYPE html>
 
 <html lang="en-us">
@@ -15,16 +10,16 @@
 <!-- Yandex Games SDK -->
 <script src="https://cdn.jsdelivr.net/gh/organization-schoogls/x@main/v2.17dba47ac96b1562d184.js"></script>
 <style>
-        /* Убираем выделение по нажатию клавиш */
+        /* Ð£Ð±Ð¸Ñ€Ð°ÐµÐ¼ Ð²Ñ‹Ð´ÐµÐ»ÐµÐ½Ð¸Ðµ Ð¿Ð¾ Ð½Ð°Ð¶Ð°Ñ‚Ð¸ÑŽ ÐºÐ»Ð°Ð²Ð¸Ñˆ */
         canvas:focus {
             outline: none;
         }
 
         html, body {
-            /* Убираем отступы */
+            /* Ð£Ð±Ð¸Ñ€Ð°ÐµÐ¼ Ð¾Ñ‚ÑÑ‚ÑƒÐ¿Ñ‹ */
             padding: 0;
             margin: 0;
-            /* Отключаем скролл и лонгтап на IOS */
+            /* ÐžÑ‚ÐºÐ»ÑŽÑ‡Ð°ÐµÐ¼ ÑÐºÑ€Ð¾Ð»Ð» Ð¸ Ð»Ð¾Ð½Ð³Ñ‚Ð°Ð¿ Ð½Ð° IOS */
             overflow: hidden;
             -webkit-touch-callout: none;
             -webkit-user-select: none;
@@ -33,7 +28,7 @@
             -ms-user-select: none;
             user-select: none;
             -webkit-tap-highlight-color: rgba(0,0,0,0);
-            /* Ставим высоту на 100% */
+            /* Ð¡Ñ‚Ð°Ð²Ð¸Ð¼ Ð²Ñ‹ÑÐ¾Ñ‚Ñƒ Ð½Ð° 100% */
             height: 100%;
         }
     </style>
@@ -93,16 +88,16 @@
             
         }
 
-        // Фоновое изображение при загрузке игры. При сборке билда код меняется взависимости от настроек проекта.
+        // Ð¤Ð¾Ð½Ð¾Ð²Ð¾Ðµ Ð¸Ð·Ð¾Ð±Ñ€Ð°Ð¶ÐµÐ½Ð¸Ðµ Ð¿Ñ€Ð¸ Ð·Ð°Ð³Ñ€ÑƒÐ·ÐºÐµ Ð¸Ð³Ñ€Ñ‹. ÐŸÑ€Ð¸ ÑÐ±Ð¾Ñ€ÐºÐµ Ð±Ð¸Ð»Ð´Ð° ÐºÐ¾Ð´ Ð¼ÐµÐ½ÑÐµÑ‚ÑÑ Ð²Ð·Ð°Ð²Ð¸ÑÐ¸Ð¼Ð¾ÑÑ‚Ð¸ Ð¾Ñ‚ Ð½Ð°ÑÑ‚Ñ€Ð¾ÐµÐº Ð¿Ñ€Ð¾ÐµÐºÑ‚Ð°.
         
         loadingCover.style.background = "url('https://cdn.jsdelivr.net/gh/organization-schoogls/x@main/background.jpg') center / cover";
         progressBarEmpty.style.backgroundColor = "#000000";
         loadingCover.style.display = "";
 
-        // Выключаем появление меню при правом клике мыши
+        // Ð’Ñ‹ÐºÐ»ÑŽÑ‡Ð°ÐµÐ¼ Ð¿Ð¾ÑÐ²Ð»ÐµÐ½Ð¸Ðµ Ð¼ÐµÐ½ÑŽ Ð¿Ñ€Ð¸ Ð¿Ñ€Ð°Ð²Ð¾Ð¼ ÐºÐ»Ð¸ÐºÐµ Ð¼Ñ‹ÑˆÐ¸
         document.addEventListener('contextmenu', event => event.preventDefault());
 
-        // Возвращаем фокус, если кликнули по экрану
+        // Ð’Ð¾Ð·Ð²Ñ€Ð°Ñ‰Ð°ÐµÐ¼ Ñ„Ð¾ÐºÑƒÑ, ÐµÑÐ»Ð¸ ÐºÐ»Ð¸ÐºÐ½ÑƒÐ»Ð¸ Ð¿Ð¾ ÑÐºÑ€Ð°Ð½Ñƒ
         function FocusGame() {
             window.focus();
             canvas.focus();
@@ -131,10 +126,10 @@
 
         function ResumeGame() {
             if (myGameInstance && myGameInstance.Module) {
-                // Возобновление главного цикла Unity
+                // Ð’Ð¾Ð·Ð¾Ð±Ð½Ð¾Ð²Ð»ÐµÐ½Ð¸Ðµ Ð³Ð»Ð°Ð²Ð½Ð¾Ð³Ð¾ Ñ†Ð¸ÐºÐ»Ð° Unity
                 myGameInstance.Module.resumeMainLoop();
 
-                // (Курсор снова может быть спрятан, если это требуется игрой)
+                // (ÐšÑƒÑ€ÑÐ¾Ñ€ ÑÐ½Ð¾Ð²Ð° Ð¼Ð¾Ð¶ÐµÑ‚ Ð±Ñ‹Ñ‚ÑŒ ÑÐ¿Ñ€ÑÑ‚Ð°Ð½, ÐµÑÐ»Ð¸ ÑÑ‚Ð¾ Ñ‚Ñ€ÐµÐ±ÑƒÐµÑ‚ÑÑ Ð¸Ð³Ñ€Ð¾Ð¹)
             }
 
             let audioElements = document.querySelectorAll('audio, video');
@@ -164,14 +159,14 @@
                         myGameInstance = unityInstance;
                         loadingCover.style.display = "none";
                     }).catch((message) => {
-                        console.error("Unity yükleme hatası:", message);
+                        console.error("Unity yÃ¼kleme hatasÄ±:", message);
                     });
                 };
                 StartUnityInstance();
             };
             document.body.appendChild(script);
         } catch (error) {
-            console.error("Başlatma sırasında hata:", error);
+            console.error("BaÅŸlatma sÄ±rasÄ±nda hata:", error);
         }
 
         function StartUnityInstance_IfUnloaded() {
@@ -228,7 +223,7 @@ console.log('Init Player ysdk');
                     myGameInstance.SendMessage('YandexGame', 'OpenFullAd');
                 }
             } catch (error) {
-                console.error("InitGame sırasında hata:", error);
+                console.error("InitGame sÄ±rasÄ±nda hata:", error);
             }
         }
 
@@ -609,8 +604,8 @@ async function GetLeaderboardScores(nameLB, maxPlayers, quantityTop, quantityAro
                 jsonEntries.isDefault = res.default;
                 jsonEntries.isInvertSortOrder = res.description.invert_sort_order;
                 jsonEntries.decimalOffset = res.description.score_format.options.decimal_offset;
-                jsonEntries.type = res.description.type; // Не определяется на момент 18.07.23
-                //jsonEntries.title = res.title; // Реализуйте по предпочтениям
+                jsonEntries.type = res.description.type; // ÐÐµ Ð¾Ð¿Ñ€ÐµÐ´ÐµÐ»ÑÐµÑ‚ÑÑ Ð½Ð° Ð¼Ð¾Ð¼ÐµÐ½Ñ‚ 18.07.23
+                //jsonEntries.title = res.title; // Ð ÐµÐ°Ð»Ð¸Ð·ÑƒÐ¹Ñ‚Ðµ Ð¿Ð¾ Ð¿Ñ€ÐµÐ´Ð¿Ð¾Ñ‡Ñ‚ÐµÐ½Ð¸ÑÐ¼
 
                 return leaderboard.getLeaderboardEntries(nameLB, {
                     quantityTop: quantityTop,

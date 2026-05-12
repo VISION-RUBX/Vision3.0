@@ -1,7 +1,4 @@
-<!DOCTYPE html>
-<!-- Ultimate Game Stash file--> 
-<!-- For the regularly updating doc go to https://docs.google.com/document/d/1_FmH3BlSBQI7FGgAQL59-ZPe8eCxs35wel6JUyVaG8Q/ -->
-
+﻿<!DOCTYPE html>
 <!DOCTYPE html>
 <html lang="en-us">
     <head>
@@ -90,14 +87,14 @@
 			document.addEventListener('pointerlockchange', function() {
 		  
 			if (document.pointerLockElement === canvas) {
-				// Курсор только что был скрыт
-				//console.log('Курсор скрыт');
-				// Здесь можно вызвать функцию или уведомить вашу игру о том, что курсор скрыт
+				// ÐšÑƒÑ€ÑÐ¾Ñ€ Ñ‚Ð¾Ð»ÑŒÐºÐ¾ Ñ‡Ñ‚Ð¾ Ð±Ñ‹Ð» ÑÐºÑ€Ñ‹Ñ‚
+				//console.log('ÐšÑƒÑ€ÑÐ¾Ñ€ ÑÐºÑ€Ñ‹Ñ‚');
+				// Ð—Ð´ÐµÑÑŒ Ð¼Ð¾Ð¶Ð½Ð¾ Ð²Ñ‹Ð·Ð²Ð°Ñ‚ÑŒ Ñ„ÑƒÐ½ÐºÑ†Ð¸ÑŽ Ð¸Ð»Ð¸ ÑƒÐ²ÐµÐ´Ð¾Ð¼Ð¸Ñ‚ÑŒ Ð²Ð°ÑˆÑƒ Ð¸Ð³Ñ€Ñƒ Ð¾ Ñ‚Ð¾Ð¼, Ñ‡Ñ‚Ð¾ ÐºÑƒÑ€ÑÐ¾Ñ€ ÑÐºÑ€Ñ‹Ñ‚
 				   window.unityInstance.SendMessage('Game', 'OnCursorVisibilityChanged', 0);
 			  } else {
-				// Курсор только что стал видимым
-				//console.log('Курсор отображается');
-				// Здесь можно вызвать функцию или уведомить вашу игру о том, что курсор отображается
+				// ÐšÑƒÑ€ÑÐ¾Ñ€ Ñ‚Ð¾Ð»ÑŒÐºÐ¾ Ñ‡Ñ‚Ð¾ ÑÑ‚Ð°Ð» Ð²Ð¸Ð´Ð¸Ð¼Ñ‹Ð¼
+				//console.log('ÐšÑƒÑ€ÑÐ¾Ñ€ Ð¾Ñ‚Ð¾Ð±Ñ€Ð°Ð¶Ð°ÐµÑ‚ÑÑ');
+				// Ð—Ð´ÐµÑÑŒ Ð¼Ð¾Ð¶Ð½Ð¾ Ð²Ñ‹Ð·Ð²Ð°Ñ‚ÑŒ Ñ„ÑƒÐ½ÐºÑ†Ð¸ÑŽ Ð¸Ð»Ð¸ ÑƒÐ²ÐµÐ´Ð¾Ð¼Ð¸Ñ‚ÑŒ Ð²Ð°ÑˆÑƒ Ð¸Ð³Ñ€Ñƒ Ð¾ Ñ‚Ð¾Ð¼, Ñ‡Ñ‚Ð¾ ÐºÑƒÑ€ÑÐ¾Ñ€ Ð¾Ñ‚Ð¾Ð±Ñ€Ð°Ð¶Ð°ÐµÑ‚ÑÑ
 				   window.unityInstance.SendMessage('Game', 'OnCursorVisibilityChanged', 1);
 			  }
 			});

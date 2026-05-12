@@ -85,6 +85,10 @@ body.is-transitioning .page-transition {
   transition: opacity 420ms ease, transform 420ms ease;
 }
 
+.page-play .player-shell {
+  padding-bottom: 88px;
+}
+
 body.is-ready .page-shell,
 body.is-ready .player-shell {
   opacity: 1;
@@ -115,6 +119,24 @@ body.is-transitioning .player-shell {
   backdrop-filter: blur(12px);
 }
 
+.performance-mode .topbar,
+.performance-mode .player-bar,
+.performance-mode .utility-band,
+.performance-mode .results-bar,
+.performance-mode .music-feature,
+.performance-mode .music-dock,
+.performance-mode .frame-wrap,
+.performance-mode .state-block,
+.performance-mode .tab-shell,
+.performance-mode .filter-bar,
+.performance-mode .request-panel,
+.performance-mode .stat-card,
+.performance-mode .game-card,
+.performance-mode .track-row,
+.performance-mode .update-card {
+  backdrop-filter: none;
+}
+
 .topbar {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(320px, 440px);
@@ -142,7 +164,7 @@ body.is-transitioning .player-shell {
 }
 
 .brand-block h1 {
-  font-size: clamp(2.6rem, 5vw, 4.8rem);
+  font-size: clamp(2rem, 4.1vw, 3.4rem);
   line-height: 0.95;
 }
 
@@ -159,6 +181,11 @@ body.is-transitioning .player-shell {
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+}
+
+.brand-block .eyebrow {
+  font-size: 1.05rem;
+  letter-spacing: 0.18em;
 }
 
 .intro-copy,
@@ -422,6 +449,12 @@ body.is-transitioning .player-shell {
   min-height: 200px;
 }
 
+.panel-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 18px;
+}
+
 .game-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
@@ -433,8 +466,16 @@ body.is-transitioning .player-shell {
 .update-card {
   position: relative;
   overflow: hidden;
+  content-visibility: auto;
+  contain-intrinsic-size: 160px;
   animation: cardEntrance 460ms ease both;
   animation-delay: calc(var(--stagger, 0) * 16ms);
+}
+
+.performance-mode .game-card,
+.performance-mode .track-row,
+.performance-mode .update-card {
+  animation: none;
 }
 
 .game-card {
@@ -480,6 +521,17 @@ body.is-transitioning .player-shell {
     0 20px 40px rgba(0, 0, 0, 0.32),
     0 0 0 1px rgba(255, 255, 255, 0.1),
     0 0 22px rgba(255, 255, 255, 0.08);
+}
+
+.performance-mode .game-card:hover,
+.performance-mode .game-card:focus-visible,
+.performance-mode .track-row:hover,
+.performance-mode .track-row:focus-visible,
+.performance-mode .update-card:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 12px 24px rgba(0, 0, 0, 0.24),
+    0 0 0 1px rgba(255, 255, 255, 0.08);
 }
 
 .game-card:hover::before,
@@ -540,10 +592,21 @@ body.is-transitioning .player-shell {
   margin-bottom: 18px;
 }
 
+.music-feature-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: end;
+  gap: 8px;
+}
+
 .music-list,
 .updates-list {
   display: grid;
   gap: 14px;
+}
+
+.music-list-collapsed {
+  display: none;
 }
 
 .track-row {
@@ -648,22 +711,8 @@ body.is-transitioning .player-shell {
   transform: translateY(0);
 }
 
-.frame-wrap.is-loaded .frame-loading {
-  opacity: 0;
-  transform: translateY(-8px);
-  pointer-events: none;
-}
-
 .frame-loading {
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  display: grid;
-  place-items: center;
-  padding: 22px;
-  color: var(--text-soft);
-  background: linear-gradient(180deg, rgba(12, 12, 12, 0.72), rgba(4, 4, 4, 0.88));
-  transition: opacity var(--smooth), transform var(--smooth);
+  display: none !important;
 }
 
 #gameFrame {
@@ -701,6 +750,12 @@ body.is-transitioning .player-shell {
   align-items: center;
 }
 
+.music-dock-side {
+  display: grid;
+  gap: 10px;
+  justify-items: end;
+}
+
 .music-dock-copy {
   min-width: 0;
 }
@@ -715,12 +770,35 @@ body.is-transitioning .player-shell {
   gap: 10px;
 }
 
+.music-dock-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
 .music-dock-bottom {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto 130px;
   gap: 12px;
   align-items: center;
   margin-top: 16px;
+}
+
+.music-dock.is-collapsed .music-dock-bottom {
+  display: none;
+}
+
+.music-dock-reopen {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 52;
+  box-shadow: var(--shadow);
+}
+
+.performance-mode .particle-canvas {
+  opacity: 0.55;
 }
 
 input[type="range"] {
@@ -800,8 +878,12 @@ code {
     padding-bottom: 220px;
   }
 
+  .page-play .player-shell {
+    padding-bottom: 84px;
+  }
+
   .brand-block h1 {
-    font-size: clamp(2.2rem, 9vw, 3.8rem);
+    font-size: clamp(1.7rem, 7vw, 2.5rem);
   }
 
   .stats-grid {
@@ -856,6 +938,16 @@ code {
     width: 100%;
   }
 
+  .music-dock-side {
+    justify-items: stretch;
+  }
+
+  .music-dock-actions,
+  .music-dock-controls {
+    width: 100%;
+  }
+
+  .music-dock-actions .control-button,
   .music-dock-controls .control-button {
     flex: 1 1 calc(50% - 10px);
   }
@@ -882,5 +974,23 @@ code {
   #gameFrame {
     min-height: calc(100vh - 340px);
     height: calc(100vh - 340px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .page-shell,
+  .player-shell,
+  .page-transition,
+  .particle-canvas,
+  .game-card,
+  .track-row,
+  .update-card,
+  .frame-wrap {
+    animation: none !important;
+    transition: none !important;
   }
 }

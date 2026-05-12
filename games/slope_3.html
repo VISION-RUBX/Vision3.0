@@ -1,11 +1,4 @@
-<!DOCTYPE html>
-
-
-<!-- Ultimate Game Stash file--> 
-<!-- For the regularly updating doc go to https://docs.google.com/document/d/1_FmH3BlSBQI7FGgAQL59-ZPe8eCxs35wel6JUyVaG8Q/ -->
-
-
-
+﻿<!DOCTYPE html>
 <html lang="en-us">
   <head>
     <base href="https://cdn.jsdelivr.net/gh/bubbls/UGS-Assets@main/slope%203/">
@@ -96,7 +89,7 @@
           const merged = new Uint8Array(totalLen);
           let offset = 0;
           for (const b of buffers) { merged.set(new Uint8Array(b), offset); offset += b.byteLength; }
-          log(`✅ Merged: ${filePath} (${(totalLen/1024/1024).toFixed(2)} MB)`);
+          log(`âœ… Merged: ${filePath} (${(totalLen/1024/1024).toFixed(2)} MB)`);
           return merged.buffer;
         } catch (e) { error(e); throw e; }
       }

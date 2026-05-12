@@ -10,7 +10,8 @@ const GAMES_OUTPUT_PATH = path.join(REPO_ROOT, "games.json");
 const MUSIC_OUTPUT_PATH = path.join(REPO_ROOT, "music.json");
 
 const MUSIC_SOURCE_URL = "https://vision22.my.canva.site/vision/music";
-const DOC_SOURCE_URL = "https://docs.google.com/document/d/197mgI1UY2csBnDMrUWwWJxuBjFI6fQaWSN9ar3dWglI/export?format=html";
+const GAME_SOURCE_HTML_URL = process.env.VISION_GAMES_HTML_SOURCE_URL || "";
+const GAME_SOURCE_TEXT_URL = process.env.VISION_GAMES_TEXT_SOURCE_URL || "";
 const DRIVE_DOWNLOAD_PREFIX = "https://drive.google.com/uc?export=download&id=";
 const MAX_CONCURRENCY = 6;
 
@@ -60,7 +61,7 @@ await fs.writeFile(
       musicCount: musicTracks.length,
       gameCount: gameBuild.games.length,
       kept: gameBuild.kept,
-      skipped: gameBuild.skipped
+      issues: gameBuild.issues
     },
     null,
     2
@@ -69,8 +70,8 @@ await fs.writeFile(
 );
 
 console.log(`Music tracks: ${musicTracks.length}`);
-console.log(`Games kept: ${gameBuild.games.length}`);
-console.log(`Games skipped: ${gameBuild.skipped.length}`);
+console.log(`Games imported: ${gameBuild.games.length}`);
+console.log(`Games with source issues: ${gameBuild.issues.length}`);
 
 async function buildMusicManifest() {
   const response = await fetch(MUSIC_SOURCE_URL);
@@ -161,217 +162,384 @@ async function buildMusicManifest() {
 }
 
 async function buildGameManifest() {
-  const response = await fetch(DOC_SOURCE_URL);
-  if (!response.ok) {
-    throw new Error(`Could not fetch game document (${response.status}).`);
+  if (!GAME_SOURCE_HTML_URL || !GAME_SOURCE_TEXT_URL) {
+    throw new Error("Set VISION_GAMES_HTML_SOURCE_URL and VISION_GAMES_TEXT_SOURCE_URL before rebuilding games.");
   }
 
-  const html = await response.text();
-  const candidates = extractGameCandidates(html);
+  const [htmlResponse, textResponse] = await Promise.all([
+    fetch(GAME_SOURCE_HTML_URL),
+    fetch(GAME_SOURCE_TEXT_URL)
+  ]);
+
+  if (!htmlResponse.ok) {
+    throw new Error(`Could not fetch game document HTML (${htmlResponse.status}).`);
+  }
+
+  if (!textResponse.ok) {
+    throw new Error(`Could not fetch game document text (${textResponse.status}).`);
+  }
+
+  const [html, docText] = await Promise.all([
+    htmlResponse.text(),
+    textResponse.text()
+  ]);
+  const candidates = extractGameCandidates(docText, html);
   const usedKeys = new Set();
 
   const results = await runLimited(candidates, MAX_CONCURRENCY, async candidate => {
-    const validation = await validateAndDownloadGame(candidate);
-    if (!validation.ok) {
-      return {
-        status: "skipped",
-        reason: validation.reason,
-        name: candidate.name,
-        sourceUrl: candidate.sourceUrl,
-        fileId: candidate.fileId
-      };
-    }
+    const importResult = await importGame(candidate);
+    const displayName = decorateImportedGameName(candidate.name, candidate.sourceUrl, importResult.baseHref);
 
-    const key = createUniqueKey(candidate.name, usedKeys);
+    const key = createUniqueKey(displayName, usedKeys);
     const fileName = `${key}.html`;
     const localPath = path.join(GAMES_DIR, fileName);
     const manifestEntry = {
       key,
-      name: candidate.name,
+      name: displayName,
       category: candidate.category,
       platform: candidate.platform,
       popular: candidate.popular,
       order: candidate.order,
-      fileId: candidate.fileId,
-      sourceUrl: candidate.sourceUrl,
       path: `./games/${fileName}`
     };
 
-    await fs.writeFile(localPath, validation.html, "utf8");
+    await fs.writeFile(localPath, importResult.html, "utf8");
 
     return {
-      status: "kept",
       entry: manifestEntry,
       info: {
-        name: candidate.name,
+        name: displayName,
         fileId: candidate.fileId,
-        baseHref: validation.baseHref,
-        relativeRefs: validation.relativeRefs
+        baseHref: importResult.baseHref,
+        relativeRefs: importResult.relativeRefs,
+        sourceState: importResult.sourceState,
+        issue: importResult.issue
       }
     };
   });
 
   const games = [];
   const kept = [];
-  const skipped = [];
+  const issues = [];
 
   for (const result of results) {
     if (!result) {
       continue;
     }
 
-    if (result.status === "kept") {
-      games.push(result.entry);
-      kept.push(result.info);
-      continue;
-    }
-
-    skipped.push({
-      name: result.name,
-      reason: result.reason,
-      sourceUrl: result.sourceUrl,
-      fileId: result.fileId
+    games.push(result.entry);
+    kept.push({
+      name: result.info.name,
+      fileId: result.info.fileId,
+      baseHref: result.info.baseHref,
+      relativeRefs: result.info.relativeRefs,
+      sourceState: result.info.sourceState
     });
+
+    if (result.info.issue) {
+      issues.push({
+        name: result.info.name,
+        sourceState: result.info.sourceState,
+        reason: result.info.issue,
+        fileId: result.info.fileId
+      });
+    }
   }
 
   games.sort((left, right) => left.order - right.order || left.name.localeCompare(right.name));
   await removeStaleFiles(GAMES_DIR, new Set(games.map(game => path.basename(game.path))));
 
-  return { games, kept, skipped };
+  return { games, kept, issues };
 }
 
-function extractGameCandidates(html) {
-  const paragraphs = [...html.matchAll(/<p\b[^>]*>([\s\S]*?)<\/p>/gi)].map(match => match[1]);
+function extractGameCandidates(docText, html) {
+  const fileSourceMap = buildFileSourceMap(html);
+  const lines = docText.split(/\r?\n/).map(normalizeWhitespace);
   const candidates = [];
-  let currentCategory = "Mixed";
   let currentPlatform = "Web";
   let order = 0;
-  let beforeLetters = true;
+  let started = false;
+  let pendingStandaloneName = "";
 
-  for (const paragraph of paragraphs) {
-    const plainText = normalizeWhitespace(stripTags(paragraph));
-    if (!plainText) {
+  for (const line of lines) {
+    if (!line) {
       continue;
     }
 
-    if (/^NDS Games$/i.test(plainText)) {
+    if (!started) {
+      if (/^HTML5 GAMES$/i.test(line)) {
+        started = true;
+      }
+
+      continue;
+    }
+
+    if (/^APPS\/MISC$/i.test(line) || /^Apps\/Misc/i.test(line)) {
       break;
     }
 
-    if (/^Community links$/i.test(plainText)) {
-      break;
-    }
-
-    if (/^[~\-]+$/.test(plainText) || /^WEBSITESSSS/i.test(plainText)) {
+    if (isIgnoredDocLine(line)) {
       continue;
     }
 
-    if (/^[A-Z]$/.test(plainText)) {
-      currentCategory = plainText;
-      currentPlatform = "Web";
-      beforeLetters = false;
+    const platform = extractPlatformHeading(line);
+    if (platform) {
+      currentPlatform = platform;
+      pendingStandaloneName = "";
       continue;
     }
 
-    if (/^[A-Za-z0-9 ]+ Games$/i.test(plainText)) {
-      currentCategory = "Mixed";
-      currentPlatform = plainText.replace(/\s+Games$/i, "").trim();
+    if (/^(?:https?:\/\/|data:text\/html)/i.test(line)) {
+      if (pendingStandaloneName) {
+        order += 1;
+        pushCandidate({
+          order,
+          name: pendingStandaloneName,
+          platform: currentPlatform,
+          category: categoryFromName(pendingStandaloneName),
+          popular: POPULAR_NAME_PATTERNS.some(pattern => pattern.test(pendingStandaloneName)),
+          fileRef: "",
+          sourceUrl: line
+        });
+        pendingStandaloneName = "";
+      }
+
       continue;
     }
 
-    const hrefMatch = paragraph.match(/<a\b[^>]*href="([^"]+)"/i) || paragraph.match(/<a\b[^>]*href='([^']+)'/i);
-    if (!hrefMatch) {
+    const lineEntries = [...matchGameEntries(line)];
+    if (lineEntries.length > 0) {
+      pendingStandaloneName = "";
+
+      for (const entry of lineEntries) {
+        const name = normalizeGameName(entry.name);
+        if (!name) {
+          continue;
+        }
+
+        order += 1;
+        pushCandidate({
+          order,
+          name,
+          platform: currentPlatform,
+          category: categoryFromName(name),
+          popular: POPULAR_NAME_PATTERNS.some(pattern => pattern.test(name)),
+          fileRef: entry.fileRef,
+          sourceUrl: fileSourceMap.get(entry.fileRef) || ""
+        });
+      }
+
       continue;
     }
 
-    const link = normalizeDocLink(decodeHtml(hrefMatch[1]));
-    const fileId = extractDriveFileId(link);
-    if (!fileId) {
-      continue;
+    if (looksLikeStandaloneGameName(line)) {
+      pendingStandaloneName = line;
     }
-
-    const name = normalizeGameName(plainText.split(":")[0] || plainText);
-    if (!name) {
-      continue;
-    }
-
-    order += 1;
-
-    candidates.push({
-      order,
-      name,
-      category: beforeLetters ? "Mixed" : currentCategory,
-      platform: currentPlatform,
-      popular: beforeLetters || POPULAR_NAME_PATTERNS.some(pattern => pattern.test(name)),
-      sourceUrl: link,
-      fileId
-    });
   }
 
   return candidates;
+
+  function pushCandidate(candidate) {
+    const normalizedSourceUrl = normalizeDocLink(candidate.sourceUrl);
+    candidates.push({
+      order: candidate.order,
+      name: candidate.name,
+      category: candidate.category,
+      platform: candidate.platform,
+      popular: candidate.popular,
+      fileRef: candidate.fileRef,
+      sourceUrl: normalizedSourceUrl,
+      manifestSourceUrl: normalizedSourceUrl && /^data:/i.test(normalizedSourceUrl) ? "inline:data-url" : normalizedSourceUrl,
+      fileId: extractDriveFileId(normalizedSourceUrl)
+    });
+  }
 }
 
-async function validateAndDownloadGame(candidate) {
-  const downloadUrl = `${DRIVE_DOWNLOAD_PREFIX}${candidate.fileId}`;
+function decorateImportedGameName(name, sourceUrl, baseHref) {
+  const normalizedName = normalizeWhitespace(name);
+  const sourceKey = `${sourceUrl || ""} ${baseHref || ""}`.toLowerCase();
+  if (!sourceKey.includes("subwaysurfers")) {
+    return normalizedName;
+  }
+
+  if (/^subway surfers\b/i.test(normalizedName)) {
+    return normalizedName;
+  }
+
+  return `Subway Surfers ${normalizedName}`;
+}
+
+function buildFileSourceMap(html) {
+  const sourceMap = new Map();
+
+  for (const match of html.matchAll(/<a\b[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/gi)) {
+    const text = normalizeWhitespace(stripTags(match[2] || ""));
+    if (!/\.html?$/i.test(text)) {
+      continue;
+    }
+
+    if (!sourceMap.has(text)) {
+      sourceMap.set(text, decodeHtml(match[1] || ""));
+    }
+  }
+
+  return sourceMap;
+}
+
+function isIgnoredDocLine(line) {
+  return (
+    /^[~\-─]+$/u.test(line)
+    || /^[^\p{L}\p{N}]+$/u.test(line)
+    || /^(?:README|IMPORTANT LINKS|METHODS|CREDITS|GAMES|SINGLEFILE)$/i.test(line)
+    || /^(?:HTML:|Padlet:|NPM:|UNPKG:|esm\.sh:|Skypack:)$/i.test(line)
+    || /^(?:This is a link btw|Known issue:|Community Made Singlefiles|Community singlefiles|Popular Games|v)$/i.test(line)
+    || /^(?:Google Drive Folder|Discord|Documentation|Game site|Game Request|Business Email|Contact|Internet Archive|Dropbox|Alt Dropbox|2nd Alt):/i.test(line)
+    || /^\*These are experimental/i.test(line)
+  );
+}
+
+function extractPlatformHeading(line) {
+  if (/^(ARCADE|SEGA CD|ATARI JAGUAR|SEGA SATURN|PLAYSTATION|N64|NGPC|NDS|MS-DOS)$/i.test(line)) {
+    return line.toUpperCase();
+  }
+
+  if (/^[A-Za-z0-9' .,&()/-]+ Games$/i.test(line) && !/^Popular Games$/i.test(line)) {
+    return line.replace(/\s+Games$/i, "").trim();
+  }
+
+  return "";
+}
+
+function* matchGameEntries(line) {
+  const pattern = /([^:]+?):\s*([A-Za-z0-9_.,'()\- ]+?\.html)(?:\s*\([^)]*\))?(?=\s+(?:[^:]{1,120}:\s*[A-Za-z0-9_.,'()\- ]+?\.html)|\s*$)/g;
+
+  for (const match of line.matchAll(pattern)) {
+    yield {
+      name: match[1],
+      fileRef: normalizeWhitespace(match[2])
+    };
+  }
+}
+
+function looksLikeStandaloneGameName(line) {
+  return (
+    line.length > 1
+    && line.length < 90
+    && !line.includes(":")
+    && !/\.html?$/i.test(line)
+    && !/^(?:https?:\/\/|data:text\/html)/i.test(line)
+    && !/^(?:Blocked\?|Instructions|DISCLAIMER|Credits)$/i.test(line)
+  );
+}
+
+function categoryFromName(name) {
+  const match = String(name).trim().match(/[A-Za-z]/);
+  return match ? match[0].toUpperCase() : "Mixed";
+}
+
+async function importGame(candidate) {
+  if (!candidate.sourceUrl) {
+    return createUnavailableGameResult(candidate, "Source link was missing from the doc");
+  }
+
+  if (/^data:text\/html/i.test(candidate.sourceUrl)) {
+    return importInlineHtml(candidate);
+  }
+
+  const downloadUrl = candidate.fileId
+    ? DRIVE_DOWNLOAD_PREFIX + candidate.fileId
+    : candidate.sourceUrl;
 
   let response;
 
   try {
     response = await fetch(downloadUrl, { redirect: "follow" });
   } catch (error) {
-    return { ok: false, reason: "Network request failed" };
+    return createUnavailableGameResult(candidate, "Network request failed");
   }
 
   if (!response.ok) {
-    return { ok: false, reason: `Download returned ${response.status}` };
+    return createUnavailableGameResult(candidate, `Download returned ${response.status}`);
   }
 
-  const text = await response.text();
-  const html = sanitizeGameHtml(text);
+  const importedText = await response.text();
+  const html = sanitizeGameHtml(importedText);
   const lower = html.toLowerCase();
 
   if (html.length < 500) {
-    return { ok: false, reason: "Downloaded file was too small" };
+    return createUnavailableGameResult(candidate, "Downloaded file was too small");
   }
 
   if (
-    lower.includes("sorry, the file you have requested does not exist") ||
-    lower.includes("google drive - virus scan warning") ||
-    lower.includes("access denied") ||
-    lower.includes("<title>google drive</title>")
+    lower.includes("sorry, the file you have requested does not exist")
+    || lower.includes("google drive - virus scan warning")
+    || lower.includes("access denied")
+    || lower.includes("<title>google drive</title>")
   ) {
-    return { ok: false, reason: "Drive returned an unusable file page" };
+    return createUnavailableGameResult(candidate, "Drive returned an unusable file page");
   }
 
   if (!/<(?:!doctype|html|body|iframe|script)/i.test(html)) {
-    return { ok: false, reason: "Downloaded file did not look like an HTML game" };
-  }
-
-  if (/\.swf(?:[?#"'\\s]|$)/i.test(html)) {
-    return { ok: false, reason: "Game depends on Flash SWF assets" };
+    return createUnavailableGameResult(candidate, "Downloaded file did not look like an HTML game");
   }
 
   const baseHref = html.match(/<base\b[^>]*href=["']([^"']+)["']/i)?.[1] || "";
   const relativeRefs = collectUnsafeRelativeRefs(html);
+  const issues = [];
+
+  if (/\.swf(?:[?#"'\\s]|$)/i.test(html)) {
+    issues.push("Game depends on Flash SWF assets");
+  }
 
   if (!baseHref && relativeRefs.some(ref => CRITICAL_RELATIVE_REF_EXTENSIONS.test(ref) || !/\.[a-z0-9]{2,5}(?:[?#].*)?$/i.test(ref))) {
-    return { ok: false, reason: "Game depends on missing relative assets" };
+    issues.push("Game depends on missing relative assets");
   }
 
   return {
-    ok: true,
+    sourceState: issues.length ? "warning" : "ready",
     html: ensureDoctype(html),
     baseHref,
-    relativeRefs
+    relativeRefs,
+    issue: issues.join("; ")
+  };
+}
+
+async function importInlineHtml(candidate) {
+  const match = candidate.sourceUrl.match(/^data:text\/html(?:;charset=[^;,]+)?(?:;(base64))?,(.*)$/i);
+  if (!match) {
+    return createUnavailableGameResult(candidate, "Inline data URL could not be decoded");
+  }
+
+  const payload = match[2] || "";
+  const decoded = match[1]
+    ? Buffer.from(payload, "base64").toString("utf8")
+    : decodeURIComponent(payload);
+  const html = sanitizeGameHtml(decoded);
+
+  if (!/<(?:!doctype|html|body|iframe|script)/i.test(html)) {
+    return createUnavailableGameResult(candidate, "Inline data URL did not contain HTML game content");
+  }
+
+  const baseHref = html.match(/<base\b[^>]*href=["']([^"']+)["']/i)?.[1] || "";
+  return {
+    sourceState: "ready",
+    html: ensureDoctype(html),
+    baseHref,
+    relativeRefs: collectUnsafeRelativeRefs(html),
+    issue: ""
   };
 }
 
 function sanitizeGameHtml(html) {
   return html
     .replace(/^\s*<module>\s*/i, "")
+    .replace(/^\s*<content[^>]*>\s*/i, "")
     .replace(/<script>\s*gadgets\.util\.runOnLoadHandlers\(\);\s*<\/script>/gi, "")
     .replace(/<script>\s*window\.google\.csi\.tickDl\(\);\s*<\/script>/gi, "")
     .replace(/<script\b[^>]*src=["']\s*["'][^>]*>\s*<\/script>/gi, "")
+    .replace(/\s*\]\]><\/content>\s*<\/module>\s*$/i, "")
+    .replace(/\s*<\/content>\s*<\/module>\s*$/i, "")
+    .replace(/\s*<\/module>\s*$/i, "")
     .replace(/\uFEFF/g, "")
     .trim();
 }
@@ -382,6 +550,98 @@ function ensureDoctype(html) {
   }
 
   return `<!DOCTYPE html>\n${html}`;
+}
+
+function createUnavailableGameResult(candidate, reason) {
+  return {
+    sourceState: "unavailable",
+    html: createUnavailableGameHtml(candidate, reason),
+    baseHref: "",
+    relativeRefs: [],
+    issue: reason
+  };
+}
+
+function createUnavailableGameHtml(candidate, reason) {
+  const gameName = escapeHtml(candidate.name);
+  const sourceUrl = escapeHtml(candidate.sourceUrl);
+  const message = escapeHtml(reason);
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>${gameName} | Vision 3.0</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #050505;
+      --panel: rgba(255, 255, 255, 0.08);
+      --border: rgba(255, 255, 255, 0.14);
+      --text: #f5f5f5;
+      --muted: #b9b9b9;
+      --accent: #ffffff;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background:
+        radial-gradient(circle at top, rgba(255, 255, 255, 0.08), transparent 36%),
+        linear-gradient(180deg, #0e0e0e 0%, #050505 100%);
+      color: var(--text);
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    main {
+      width: min(720px, 100%);
+      padding: 28px;
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      background: var(--panel);
+      backdrop-filter: blur(18px);
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: clamp(1.8rem, 4vw, 2.6rem);
+      line-height: 1.05;
+    }
+
+    p {
+      margin: 0 0 14px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .reason {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    a {
+      color: var(--accent);
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>${gameName}</h1>
+    <p>This game is listed in the Google Doc, but its source file could not be imported into the local launcher.</p>
+    <p class="reason">Import issue: ${message}</p>
+    <p>If the original file gets fixed or re-uploaded in Google Drive, rerunning the manifest builder will pull it back in automatically.</p>
+    <p>Original source: <a href="${sourceUrl}" target="_blank" rel="noreferrer noopener">${sourceUrl}</a></p>
+  </main>
+</body>
+</html>`;
 }
 
 function collectUnsafeRelativeRefs(html) {
@@ -527,6 +787,15 @@ function stripTags(value) {
 
 function normalizeWhitespace(value) {
   return value.replace(/\s+/g, " ").trim();
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
 function decodeHtml(value) {

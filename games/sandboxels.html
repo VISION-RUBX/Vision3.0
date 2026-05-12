@@ -1,10 +1,7 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html>
 
-<!-- Ultimate Game Stash file -->
-<!-- For the regularly updating doc go to https://docs.google.com/document/d/1_FmH3BlSBQI7FGgAQL59-ZPe8eCxs35wel6JUyVaG8Q/ -->
-
-
+<!--  -->
 <!DOCTYPE html>
 <html lang="en" class="homepage">
 
@@ -96,7 +93,7 @@
 		  "softwareRequirements": "HTML5",
 		  "archivedAt": "https://web.archive.org/web/20230519005427/https://sandboxels.r74n.com/",
 		  "copyrightYear": 2021,
-		  "copyrightNotice": "©2021-2025. All Rights Reserved. R74n",
+		  "copyrightNotice": "Â©2021-2025. All Rights Reserved. R74n",
 		  "license": "https://sandboxels.r74n.com/license.txt",
 		  "discussionUrl": ["https://r74n.com/discord/","https://www.reddit.com/r/Sandboxels/","https://steamcommunity.com/app/3664820/discussions/"],
 		  "downloadUrl": "https://store.steampowered.com/app/3664820/Sandboxels/",
@@ -131,7 +128,7 @@
 		console.log("Sandboxels is developed by R74n and can be played on the official website: https://sandboxels.R74n.com/");
 		console.log("Can't access? Join our Discord: https://R74n.com/discord/");
 		console.log("Found this on another website? Let us know!");
-		console.log("©2021-" + new Date().getFullYear() + ". All Rights Reserved. https://sandboxels.R74n.com/license.txt");
+		console.log("Â©2021-" + new Date().getFullYear() + ". All Rights Reserved. https://sandboxels.R74n.com/license.txt");
 
 		isOnSite = location.hostname === "sandboxels.r74n.com";
 
@@ -5191,7 +5188,7 @@ SEEDRISE: function(pixel) {
 	stateLow: "dry_ice",
 	state: "gas",
 	density: 1.977,
-	alias: ["CO2","CO₂"]
+	alias: ["CO2","COâ‚‚"]
 },
 "bubble": {
 	color: "#afc7fa",
@@ -15388,9 +15385,9 @@ behaviorRules = {
 			0: 65, // null -> A
 			58: 65, // : -> A
 			91: 97, // [ -> a
-			123: 192, // { -> À
-			215: 216, // × -> Ø
-			247: 248, // ÷ -> ø
+			123: 192, // { -> Ã€
+			215: 216, // Ã— -> Ã˜
+			247: 248, // Ã· -> Ã¸
 			688: 880,
 			884: 886,
 			888: 891,
@@ -15499,7 +15496,7 @@ behaviorRules = {
 			else {
 				var url = window.location.href;
 			}
-			if (!saveOptions.raw) { var compressedMap = JSON.stringify(pixelarray).replace(/,0/g,"×").replace(/":"/g,"»").replace(/,"/g,"§").replace(/element»/g,"©").replace(/"\},\{"/g,"¸").replace(/×××/g,"³").replace(/¸©/g,"¦").replace(/"\}\],\[/g,"®").replace(/\{"/g,"¶").replace(/:true/g,"¥").replace(/:false/g,"¡").replace(/":/g,"¼").replace(/\},/g,"½").replace(/"¥§/g,"¾").replace(/³³³/g,"°").replace(/\],\[/g,"¤").replace(/rgb\(/g,"º").replace(/\)¸/g,"ª"); }
+			if (!saveOptions.raw) { var compressedMap = JSON.stringify(pixelarray).replace(/,0/g,"Ã—").replace(/":"/g,"Â»").replace(/,"/g,"Â§").replace(/elementÂ»/g,"Â©").replace(/"\},\{"/g,"Â¸").replace(/Ã—Ã—Ã—/g,"Â³").replace(/Â¸Â©/g,"Â¦").replace(/"\}\],\[/g,"Â®").replace(/\{"/g,"Â¶").replace(/:true/g,"Â¥").replace(/:false/g,"Â¡").replace(/":/g,"Â¼").replace(/\},/g,"Â½").replace(/"Â¥Â§/g,"Â¾").replace(/Â³Â³Â³/g,"Â°").replace(/\],\[/g,"Â¤").replace(/rgb\(/g,"Âº").replace(/\)Â¸/g,"Âª"); }
 			else { var compressedMap = pixelarray; }
 			var seriesIndex = 0;
 			var createdTime = Date.now();
@@ -15620,9 +15617,9 @@ behaviorRules = {
 			if (saveConfig.paused && !paused) { togglePause(); }
 			if (typeof compressedMap !== "object") {
 				if (version >= 2) {
-					compressedMap = compressedMap.replace(/ª/g,")¸").replace(/º/g,"rgb(");
+					compressedMap = compressedMap.replace(/Âª/g,")Â¸").replace(/Âº/g,"rgb(");
 				}
-				compressedMap = compressedMap.replace(/¤/g,"],[").replace(/°/g,"³³³").replace(/¾/g,'"¥§').replace(/½/g,'},').replace(/¼/g,'":').replace(/¡/g,":false").replace(/¥/g,":true").replace(/¶/g,'{"').replace(/®/g,'"}],[').replace(/¦/g,"¸©").replace(/³/g,"×××").replace(/¸/g,'"},{"').replace(/©/g,"element»").replace(/§/g,',"').replace(/»/g,'":"').replace(/×/g,",0");
+				compressedMap = compressedMap.replace(/Â¤/g,"],[").replace(/Â°/g,"Â³Â³Â³").replace(/Â¾/g,'"Â¥Â§').replace(/Â½/g,'},').replace(/Â¼/g,'":').replace(/Â¡/g,":false").replace(/Â¥/g,":true").replace(/Â¶/g,'{"').replace(/Â®/g,'"}],[').replace(/Â¦/g,"Â¸Â©").replace(/Â³/g,"Ã—Ã—Ã—").replace(/Â¸/g,'"},{"').replace(/Â©/g,"elementÂ»").replace(/Â§/g,',"').replace(/Â»/g,'":"').replace(/Ã—/g,",0");
 				pixelarray = JSON.parse(compressedMap);
 			}
 			else {
@@ -17383,9 +17380,9 @@ behaviorRules = {
 		}
 
 		shiftDownTypes = {
-			1: "[↑ ]",
+			1: "[â†‘ ]",
 			2: "[A ]",
-			3: "[ ↑]",
+			3: "[ â†‘]",
 			4: "[ A]"
 		}
 		// Update stats
@@ -17433,10 +17430,10 @@ behaviorRules = {
 
 		function formatTemp(temp) { // temp is Celcius
 			if (!settings["units"] || settings["units"] === "m") { // Celsius
-				return Math.round(temp)+"°C"
+				return Math.round(temp)+"Â°C"
 			}
 			else if (settings["units"] === "i") { // Fahrenheit
-				return Math.round(temp*1.8+32)+"°F"
+				return Math.round(temp*1.8+32)+"Â°F"
 			}
 			else if (settings["units"] === "s") { // Kelvin
 				return Math.round(temp+273.15)+"K"
@@ -17449,14 +17446,14 @@ behaviorRules = {
 			else if (density > 10) { digits = 1; }
 			// default/metric = kg/m3, imperial = lb/ft3, si = g/cm3
 			if (!settings["units"] || settings["units"] === "m") { // kg/m3
-				return density.toFixed(digits)+" kg⁄m<sup>3</sup>"
+				return density.toFixed(digits)+" kgâ„m<sup>3</sup>"
 			}
 			else if (settings["units"] === "i") { // lb/ft3
-				return (density/16.018).toFixed(digits)+" lb⁄ft<sup>3</sup>"
+				return (density/16.018).toFixed(digits)+" lbâ„ft<sup>3</sup>"
 			}
 			else if (settings["units"] === "s") { // g/cm3
 				// round to 2 decimal places
-				return ((density/10)/100).toFixed(digits)+" g⁄cm<sup>3</sup>"
+				return ((density/10)/100).toFixed(digits)+" gâ„cm<sup>3</sup>"
 			}
 		}
 
@@ -17697,7 +17694,7 @@ for (var k = 0; k < b0.split(" AND ").length; k++) {
 	}
 	else if (element === "") {
 		infoTitle.innerHTML = "Browse";
-		infoText.innerHTML = "\n"+infoLink("all")+" • "+infoLink("undiscovered")+" • "+infoLink("discovered")+"\n\n";
+		infoText.innerHTML = "\n"+infoLink("all")+" â€¢ "+infoLink("undiscovered")+" â€¢ "+infoLink("discovered")+"\n\n";
 		var temptext = "";
 		for (var i = 0; i < categoryList.length; i++) {
 			temptext += infoLink(categoryList[i]) + "\n";
@@ -17872,7 +17869,7 @@ for (var k = 0; k < b0.split(" AND ").length; k++) {
 			}
 			// remove trailing slashes
 			while (url.charAt(url.length-1) == "/") { url = url.substring(0, url.length-1); }
-			url = url.replaceAll(/['‘’“”"\$\{\}\\]/g,"");
+			url = url.replaceAll(/['â€˜â€™â€œâ€"\$\{\}\\]/g,"");
 			// if the url doesn't have a slash or a dot, alert
 			if (url.indexOf("/") == -1 && url.indexOf(".") == -1 && !noMessage) {
 				promptText("Invalid mod URL.\n\nYou usually want something like 'survival.js' (without the quotes)", showModManager, "Error");
@@ -18251,7 +18248,7 @@ for (var k = 0; k < b0.split(" AND ").length; k++) {
 				if (subs) {
 					let subSpan = document.createElement("span");
 					subSpan.className = "saveSlotSub";
-					subSpan.innerText = subs.join(" • ");
+					subSpan.innerText = subs.join(" â€¢ ");
 					span.appendChild(subSpan);
 				}
 
@@ -19567,9 +19564,9 @@ window.onload = function() {
 	}
 	// Set the first button in categoryControls div to be the current category
 	document.getElementById("categoryControls").children[0].click()
-	document.getElementById("extraInfo").insertAdjacentHTML("beforeend", "<small class='extraInfo-right'><p><span id='extraInfo-name'>Sandboxels </span>v" + currentversion + " • <span id='elementCountSpan'>" +
+	document.getElementById("extraInfo").insertAdjacentHTML("beforeend", "<small class='extraInfo-right'><p><span id='extraInfo-name'>Sandboxels </span>v" + currentversion + " â€¢ <span id='elementCountSpan'>" +
 		langKey("guitemplate.elementCount","$1 elements, with $2 hidden",{1:elementCount,2:hiddenCount}) +
-		"</span>.</p></small><small id='attribution'><p>©2021-" + new Date().getFullYear() + ". <a href='https://sandboxels.R74n.com/license.txt' rel='license' target='_blank' id='copyrightLabel'>All Rights Reserved</a>. <a style='color:#00ffff' rel='author' href='https://r74n.com'>R74n</a></p></small>");
+		"</span>.</p></small><small id='attribution'><p>Â©2021-" + new Date().getFullYear() + ". <a href='https://sandboxels.R74n.com/license.txt' rel='license' target='_blank' id='copyrightLabel'>All Rights Reserved</a>. <a style='color:#00ffff' rel='author' href='https://r74n.com'>R74n</a></p></small>");
 	selectElement(currentElement);
 	focusGame();
 	// For every button element, onkeyup="event.preventDefault()"
@@ -19653,7 +19650,7 @@ window.onload = function() {
 			<div id="stats"></div>
 			<div id="controls">
 				<div id="toolControls">
-					<button id="shiftButton" title="Toggle Shift key" class="controlButton" onclick='toggleShift();focusGame();' on="false" style="display:none">↑</button><button id="pauseButton" title="Pause/play the simulation" class="controlButton" onclick='togglePause();focusGame();' on="false">Pause</button><button id="frameButton" title="Pause and play one frame" class="controlButton" onclick='doFrame();focusGame();' on="false">&gt;</button><button id="sizeDownButton" title="Decrease the brush size" class="controlButton" onclick="mouseSize -= shiftDown?mouseSize-1:2;checkMouseSize(true);centerMouse();focusGame();">-</button><button id="sizeUpButton" title="Increase the brush size" class="controlButton" onclick="mouseSize += shiftDown?14:2;checkMouseSize(true);centerMouse();focusGame();">+</button><button id="resetButton" title="Clear the entire scene" class="controlButton" onclick="resetPrompt();">Reset</button><button id="replaceButton" title="Override existing pixels when placing" class="controlButton" onclick='if (mode == "replace") {mode = null;this.setAttribute("on","false");}else {mode = "replace";this.setAttribute("on","true");};focusGame();' on="false">Replace</button><button id="elemSelectButton" title="Select an element by name" class="controlButton" onclick='chooseElementPrompt();'>E</button><button id="tpsButton" title="Change the simulation Ticks Per Second (TPS)" class="controlButton" onclick='tpsPrompt()'>Tps</button><!--<button id="hideButton" title="Stops updating the scene to allow more resources towards simulation" class="controlButton" onclick='if (hiding) {hiding = false;this.setAttribute("on","false");}else {hiding = true;this.setAttribute("on","true");};focusGame();' on="false">Hide</button>--><button id="infoButton" title="Brings up the element info screen" class="controlButton" onclick='if (showingMenu!="info"){closeMenu();showInfo("")}else{closeMenu()};' on="false">Info</button><button id="savesButton" title="Brings up the Save & Load menu" class="controlButton" onclick='if (showingMenu!="saves"){closeMenu();showSaves()}else{closeMenu()};' on="false">Saves</button><button id="modsButton" title="Brings up the Mod Manager" class="controlButton" onclick='if (showingMenu!="mods"){closeMenu();showModManager()}else{closeMenu()};' on="false">Mods</button><button id="settingsButton" title="Brings up the settings screen" class="controlButton" onclick='if (showingMenu!="settings"){closeMenu();showSettings()}else{closeMenu()};' on="false">Settings</button>
+					<button id="shiftButton" title="Toggle Shift key" class="controlButton" onclick='toggleShift();focusGame();' on="false" style="display:none">â†‘</button><button id="pauseButton" title="Pause/play the simulation" class="controlButton" onclick='togglePause();focusGame();' on="false">Pause</button><button id="frameButton" title="Pause and play one frame" class="controlButton" onclick='doFrame();focusGame();' on="false">&gt;</button><button id="sizeDownButton" title="Decrease the brush size" class="controlButton" onclick="mouseSize -= shiftDown?mouseSize-1:2;checkMouseSize(true);centerMouse();focusGame();">-</button><button id="sizeUpButton" title="Increase the brush size" class="controlButton" onclick="mouseSize += shiftDown?14:2;checkMouseSize(true);centerMouse();focusGame();">+</button><button id="resetButton" title="Clear the entire scene" class="controlButton" onclick="resetPrompt();">Reset</button><button id="replaceButton" title="Override existing pixels when placing" class="controlButton" onclick='if (mode == "replace") {mode = null;this.setAttribute("on","false");}else {mode = "replace";this.setAttribute("on","true");};focusGame();' on="false">Replace</button><button id="elemSelectButton" title="Select an element by name" class="controlButton" onclick='chooseElementPrompt();'>E</button><button id="tpsButton" title="Change the simulation Ticks Per Second (TPS)" class="controlButton" onclick='tpsPrompt()'>Tps</button><!--<button id="hideButton" title="Stops updating the scene to allow more resources towards simulation" class="controlButton" onclick='if (hiding) {hiding = false;this.setAttribute("on","false");}else {hiding = true;this.setAttribute("on","true");};focusGame();' on="false">Hide</button>--><button id="infoButton" title="Brings up the element info screen" class="controlButton" onclick='if (showingMenu!="info"){closeMenu();showInfo("")}else{closeMenu()};' on="false">Info</button><button id="savesButton" title="Brings up the Save & Load menu" class="controlButton" onclick='if (showingMenu!="saves"){closeMenu();showSaves()}else{closeMenu()};' on="false">Saves</button><button id="modsButton" title="Brings up the Mod Manager" class="controlButton" onclick='if (showingMenu!="mods"){closeMenu();showModManager()}else{closeMenu()};' on="false">Mods</button><button id="settingsButton" title="Brings up the settings screen" class="controlButton" onclick='if (showingMenu!="settings"){closeMenu();showSettings()}else{closeMenu()};' on="false">Settings</button>
 				</div>
 				<script>
 					// if it is the 1st of April, add a rainbow-colored button
@@ -19719,7 +19716,7 @@ window.onload = function() {
 		<div id="infoParent">
 			<div id="infoScreen"> <!--Element Info Page-->
 				<button class="XButton" onclick="closeMenu();">-</button>
-				<span class='infoLink noselect' id="infoBackButton" onclick='infoBack()' style='text-decoration:none!important;display:none'>←&nbsp;</span><span class="menuTitle" id="infoTitle">Title</span>
+				<span class='infoLink noselect' id="infoBackButton" onclick='infoBack()' style='text-decoration:none!important;display:none'>â†&nbsp;</span><span class="menuTitle" id="infoTitle">Title</span>
 				<div class="menuText" id="infoText">Text</div>
 			</div>
 			<input type="text" id="infoSearch" placeholder="Element..." oninput="showInfo(this.value);" enterkeyhint="done"></input>
@@ -19841,12 +19838,12 @@ window.onload = function() {
 					</span>
 					<span id="promptDirs" class="promptChoices" style="display:none">
 						<!-- right = 0, down = 1, left = 2, up = 3 -->
-						<span class="promptChoice" onclick="handlePrompt(3)">↑</span>
+						<span class="promptChoice" onclick="handlePrompt(3)">â†‘</span>
 						<span class="promptChoicesSub">
-							<span class="promptChoice" onclick="handlePrompt(2)">←</span>
-							<span class="promptChoice" onclick="handlePrompt(0)">→</span>
+							<span class="promptChoice" onclick="handlePrompt(2)">â†</span>
+							<span class="promptChoice" onclick="handlePrompt(0)">â†’</span>
 						</span>
-						<span class="promptChoice" onclick="handlePrompt(1)">↓</span>
+						<span class="promptChoice" onclick="handlePrompt(1)">â†“</span>
 					</span>
 					<input type="text" id="promptInput" placeholder="Input..." onkeydown="if (event.keyCode == 13) {handlePrompt(this.value || null);}" enterkeyhint="done" style="display:none" autocomplete="off"></input>
 				</div>
@@ -19972,13 +19969,13 @@ Cancer, Landmine, Grenade, Smoke Grenade">?</span>
 							<option value="0.25" id="setting-events-0.25">Overdrive (DANGEROUS)</option>
 						</select>
 					</span>
-					<span setting="airtemp" class="setting-span multisetting" title="Temperature that pixels spawn in at. Default: 20 (°C)">
+					<span setting="airtemp" class="setting-span multisetting" title="Temperature that pixels spawn in at. Default: 20 (Â°C)">
 						<span id="settingLabel-airtemp">Air Temp</span> <input type="number" value="20" placeholder="20" onchange="if(this.value===''){this.value=20} airTemp=parseFloat(this.value); setSetting('airtemp',airTemp)">&nbsp;
 					</span>
-					<span setting="airdensity" class="setting-span multisetting" title="How dense air is. Default: 1.225 (kg/m³)">
+					<span setting="airdensity" class="setting-span multisetting" title="How dense air is. Default: 1.225 (kg/mÂ³)">
 						<span id="settingLabel-airdensity">Air Density</span> <input type="number" value="1.225" placeholder="1.225" onchange="if(this.value===''){this.value=1.225} airDensity=parseFloat(this.value); setSetting('airdensity',airDensity)">&nbsp;
 					</span>
-					<span setting="abszero" class="setting-span multisetting" title="Minimum possible temperature. Default: -273.15 (°C)">
+					<span setting="abszero" class="setting-span multisetting" title="Minimum possible temperature. Default: -273.15 (Â°C)">
 						<span id="settingLabel-abszero">Abs Zero</span> <input type="number" value="-273.15" placeholder="-273.15" onchange="if(this.value===''){this.value=-273.15} absoluteZero=parseFloat(this.value); setSetting('abszero',absoluteZero)">&nbsp;
 					</span>
 					<span class="setting-span" style="text-align:center">
@@ -20027,34 +20024,34 @@ Cancer, Landmine, Grenade, Smoke Grenade">?</span>
 			};
 			affRequest.send();
 		</script> -->
-		<p id="langSelectP">🌐 <span id="langSelectLabel">Language</span> <a href="https://sandboxels.R74n.com/translate" target="_blank">[BETA]</a>: <select onchange="if (this.value === 'en'){setSetting('lang',null)}else{setSetting('lang',this.value)}window.location.reload()" id="langSelect">
+		<p id="langSelectP">ðŸŒ <span id="langSelectLabel">Language</span> <a href="https://sandboxels.R74n.com/translate" target="_blank">[BETA]</a>: <select onchange="if (this.value === 'en'){setSetting('lang',null)}else{setSetting('lang',this.value)}window.location.reload()" id="langSelect">
 			<option selected value="en">English (American)</option>
 			<option value="en_gb">English (British)</option>
 			<option value="en_ca">English (Canadian)</option>
 			<option value="en_au">English (Australian)</option>
-			<option value="es">Español</option>
-			<option value="cs">Čeština</option>
+			<option value="es">EspaÃ±ol</option>
+			<option value="cs">ÄŒeÅ¡tina</option>
 			<option value="de">Deutsch</option>
 			<option value="fi">Suomi</option>
-			<option value="fr">Français</option>
+			<option value="fr">FranÃ§ais</option>
 			<option value="hu">Magyar</option>
 			<option value="id">Bahasa Indonesia</option>
 			<option value="it">Italiano</option>
-			<option value="ko">한국어</option>
+			<option value="ko">í•œêµ­ì–´</option>
 			<option value="pl">Polski</option>
-			<option value="pt_br">Português (Brasil)</option>
+			<option value="pt_br">PortuguÃªs (Brasil)</option>
 			<option value="qha">Halacae</option>
-			<option value="ru">Русский Язык</option>
-			<option value="sr">Српски</option>
-			<option value="tr">Türkçe</option>
-			<option value="vi">Tiếng Việt</option>
-			<option value="zh_cn">简体中文</option>
-			<option value="zh_hant">繁體中文</option>
+			<option value="ru">Ð ÑƒÑÑÐºÐ¸Ð¹ Ð¯Ð·Ñ‹Ðº</option>
+			<option value="sr">Ð¡Ñ€Ð¿ÑÐºÐ¸</option>
+			<option value="tr">TÃ¼rkÃ§e</option>
+			<option value="vi">Tiáº¿ng Viá»‡t</option>
+			<option value="zh_cn">ç®€ä½“ä¸­æ–‡</option>
+			<option value="zh_hant">ç¹é«”ä¸­æ–‡</option>
 			<optgroup label="Incomplete">
 				<option value="nl">Nederlands</option>
 				<option value="tok">Toki Pona</option>
-				<option value="uk">Українська Мова</option>
-				<option value="xem">😂🗣</option>
+				<option value="uk">Ð£ÐºÑ€Ð°Ñ—Ð½ÑÑŒÐºÐ° ÐœÐ¾Ð²Ð°</option>
+				<option value="xem">ðŸ˜‚ðŸ—£</option>
 			</optgroup>
 		</select>
 	
@@ -20157,7 +20154,7 @@ if (document.referrer && document.referrer.indexOf("r74n.") === -1) {
 		<p id="intro6">We have a thriving community on <a href="https://discord.gg/ejUc6YPQuS" target="_blank">Discord</a>! There you can post feedback or share your creations.</p>
 		<!-- <p>If you'd like to support us, consider donating on <a href="https://www.paypal.com/donate/?hosted_button_id=GCX4VHQ7SZWTN" target="_blank">PayPal</a> or <a href="https://cash.app/$emojiartist" target="_blank" title="$emojiartist">CashApp</a>, or subscribing on Discord.</p> -->
 		<p id="intro7">Business inquiries? Education stories? Help needed? Email us at <a href="mailto:contact@R74n.com?subject=%5BSandboxels%5D">contact@R74n.com</a>!</p>
-		<p id="introLinks">More links: <a href="https://sandboxels.R74n.com/help" rel="help">Help</a> • <a href="https://sandboxels.R74n.com/tips">Tips</a> • <a href="https://sandboxels.R74n.com/mod-list">Mods</a> • <a href="https://sandboxels.R74n.com/mobile-use">Mobile</a> • <a href="https://sandboxels.R74n.com/offline-use">Offline</a> • <a href="https://sandboxels.R74n.com/presskit">Press</a> • <a href="https://store.steampowered.com/app/3664820/Sandboxels/" target="_blank">Steam</a> • <a href="https://R74n.com/privacy">Privacy</a></p>
+		<p id="introLinks">More links: <a href="https://sandboxels.R74n.com/help" rel="help">Help</a> â€¢ <a href="https://sandboxels.R74n.com/tips">Tips</a> â€¢ <a href="https://sandboxels.R74n.com/mod-list">Mods</a> â€¢ <a href="https://sandboxels.R74n.com/mobile-use">Mobile</a> â€¢ <a href="https://sandboxels.R74n.com/offline-use">Offline</a> â€¢ <a href="https://sandboxels.R74n.com/presskit">Press</a> â€¢ <a href="https://store.steampowered.com/app/3664820/Sandboxels/" target="_blank">Steam</a> â€¢ <a href="https://R74n.com/privacy">Privacy</a></p>
 		<p><span id="patronThanks">Thanks to our Patrons</span>: Serioustar, ggod, personman, fnl4y, PitsPower, swagg boi, moss, Suss, epsiloneridani, Tempest the Slime, Midi_png, WeiChei, Trent, u2ce</p>
 		<p style="display:none" id="langCredit">Translation by R74n</p>
 		<p id="outro">Sandboxels is developed by R74n. Check out <a href="https://R74n.com" rel="author" target="_blank">our other projects</a>!</p>
@@ -20192,7 +20189,7 @@ if (document.referrer && document.referrer.indexOf("r74n.") === -1) {
 			<tr><td>Intensify effect</td>   <td><kbd>Shift</kbd> + <kbd style="background-color:red;">Heat</kbd>/<kbd style="background-color:blue;">Cool</kbd>/<kbd style="background-color:#c1cfb6;color:black">Drag</kbd>/<kbd style="background-color:#fff4b5;color:black">Mix</kbd></td></tr>
 			<tr><td>Draw line</td>   <td><kbd>Shift</kbd> + <kbd>Click</kbd></td></tr>
 			<tr><td>Change cursor size</td>   <td><kbd>Scroll</kbd> or <kbd>+</kbd><kbd>-</kbd> or <kbd>[</kbd><kbd>]</kbd></td></tr>
-			<tr><td>Change category</td>   <td><kbd>←</kbd><kbd>→</kbd></td></tr>
+			<tr><td>Change category</td>   <td><kbd>â†</kbd><kbd>â†’</kbd></td></tr>
 			<tr><td>Select by name</td>   <td><kbd>E</kbd></td></tr>
 			<tr><td>Element info</td>   <td><kbd>I</kbd> or <kbd>/</kbd></td></tr>
 			<tr><td>Open settings</td>   <td><kbd>\</kbd></td></tr>

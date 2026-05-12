@@ -1,5 +1,15 @@
 [
   {
+    "date": "2026-05-07",
+    "title": "Library Update",
+    "summary": "I added more than 2000+ games into Vision.",
+    "body": [
+      "The launcher now includes a huge new wave of games, with more than 2000+ added into the library.",
+      "Everything was rebuilt into the current launcher so the list stays in one place and is easier to search through."
+    ],
+    "notes": []
+  },
+  {
     "date": "2026-04-27",
     "title": "Vision Update",
     "summary": "Recently, both of our websites have been taken down - Google Sites, and now Canvas. But this isn't the end.",

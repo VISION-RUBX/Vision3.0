@@ -1,17 +1,10 @@
-<!DOCTYPE html>
-
-
-<!-- Ultimate Game Stash file--> 
-<!-- For the regularly updating doc go to https://docs.google.com/document/d/1_FmH3BlSBQI7FGgAQL59-ZPe8eCxs35wel6JUyVaG8Q/ -->
-
-
-
+﻿<!DOCTYPE html>
 <base href="https://cdn.jsdelivr.net/gh/bubbls/UGS-Assets@main/happy%20room/">
 <html lang="en-us">
 <head>
 <meta charset="utf-8">
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>Счастливая Комната</title>
+<title>Ð¡Ñ‡Ð°ÑÑ‚Ð»Ð¸Ð²Ð°Ñ ÐšÐ¾Ð¼Ð½Ð°Ñ‚Ð°</title>
 <link rel="stylesheet" href="TemplateData/style.css">
 <link rel="shortcut icon" href="TemplateData/favicon.ico" />
 <script src="TemplateData/UnityProgress.js"></script>
@@ -72,7 +65,7 @@
       if (filePath.endsWith('.js')) {
         const texts = await Promise.all(responses.map(r => r.text()));
         const merged = texts.join('');
-        log(`✅ Merged: ${filePath} (${(merged.length/1024).toFixed(2)} KB)`);
+        log(`âœ… Merged: ${filePath} (${(merged.length/1024).toFixed(2)} KB)`);
         
         const blob = new Blob([merged], { type: 'application/javascript' });
         const blobUrl = URL.createObjectURL(blob);
@@ -90,7 +83,7 @@
           offset += b.byteLength; 
         }
         
-        log(`✅ Merged: ${filePath} (${(totalLen/1024/1024).toFixed(2)} MB)`);
+        log(`âœ… Merged: ${filePath} (${(totalLen/1024/1024).toFixed(2)} MB)`);
         
         const mimeType = filePath.endsWith('.wasm') ? 'application/wasm' : 'application/octet-stream';
         const blob = new Blob([merged], { type: mimeType });
@@ -217,7 +210,7 @@
         window.mergedFiles[f.name] = result.data;
         window.blobUrls[f.name] = result.blobUrl;
         mergeStatus[f.name] = 'ready';
-        log(`✅ Ready: ${f.name}`);
+        log(`âœ… Ready: ${f.name}`);
       } catch (err) {
         mergeStatus[f.name] = 'failed';
         error(`Failed to merge ${f.name}:`, err);

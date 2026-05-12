@@ -1,16 +1,14 @@
 import {
-  createMusicPlayer,
   formatDisplayName,
+  initPerformanceMode,
   initFocusMode,
   initParticleField,
   loadJson,
   markPageReady,
-  mountMusicDock,
   startTransition
-} from "./site.js";
+} from "./site.js?v=20260511-smooth-launch";
 
-const GAME_DATA_PATH = "./games.json";
-const MUSIC_DATA_PATH = "./music.json";
+const GAME_DATA_PATH = "./games.json?v=20260511-smooth-launch";
 
 const particleCanvas = document.getElementById("particleCanvas");
 const homepageButton = document.getElementById("homepageButton");
@@ -22,36 +20,18 @@ const playerMeta = document.getElementById("playerMeta");
 const playerStatus = document.getElementById("playerStatus");
 const playerError = document.getElementById("playerError");
 const frameWrap = document.getElementById("frameWrap");
-const frameLoading = document.getElementById("frameLoading");
 const gameFrame = document.getElementById("gameFrame");
-const musicDock = document.getElementById("musicDock");
 
-let musicController = null;
-let previousMuteState = null;
 let leaving = false;
 
 document.addEventListener("DOMContentLoaded", async () => {
   markPageReady();
+  initPerformanceMode();
 
   const focusMode = initFocusMode(focusModeButton);
   const particles = initParticleField(particleCanvas);
   focusMode.subscribe(enabled => {
     particles.setFocusMode(enabled);
-
-    if (!musicController) {
-      return;
-    }
-
-    if (enabled) {
-      previousMuteState = musicController.getState().muted;
-      musicController.setMuted(true);
-      return;
-    }
-
-    if (previousMuteState !== null) {
-      musicController.setMuted(previousMuteState);
-      previousMuteState = null;
-    }
   });
 
   homepageButton.addEventListener("click", goHome);
@@ -72,29 +52,19 @@ async function loadPlayer() {
   }
 
   try {
-    const [games, tracks] = await Promise.all([
-      loadJson(GAME_DATA_PATH),
-      loadJson(MUSIC_DATA_PATH)
-    ]);
-
-    musicController = createMusicPlayer(Array.isArray(tracks) ? tracks : []);
-    mountMusicDock(musicDock, musicController);
-    if (document.body.classList.contains("focus-mode")) {
-      previousMuteState = musicController.getState().muted;
-      musicController.setMuted(true);
-    }
+    const games = await loadJson(GAME_DATA_PATH);
 
     const game = Array.isArray(games) ? games.find(entry => entry.key === selectedKey) : null;
     if (!game) {
-      showError("That game was not found in the validated list.");
+      showError("That game was not found in the launcher list.");
       return;
     }
 
     const displayName = formatDisplayName(game.name);
     playerTitle.textContent = displayName;
-    playerMeta.textContent = `${game.platform || "Web"} • ${game.category === "Mixed" ? "Mixed / Featured" : `Category ${game.category}`}`;
-    playerStatus.textContent = "Opening local validated build...";
-    document.title = `${displayName} | Vision 3.0`;
+    playerMeta.textContent = `${game.platform || "Web"} - ${game.category === "Mixed" ? "Mixed / Featured" : `Category ${game.category}`}`;
+    playerStatus.textContent = "Opening dedicated game tab...";
+    document.title = `${displayName} | Vision`;
 
     frameWrap.classList.remove("hidden");
     requestAnimationFrame(() => {
@@ -103,8 +73,7 @@ async function loadPlayer() {
 
     gameFrame.addEventListener("load", () => {
       frameWrap.classList.add("is-loaded");
-      frameLoading.textContent = "Game ready.";
-      playerStatus.textContent = "Game loaded. Fullscreen is available, and Enter exits fullscreen.";
+      playerStatus.textContent = "Game loaded. Press Homepage to return, and Enter exits fullscreen.";
     }, { once: true });
 
     gameFrame.src = game.path;
@@ -134,8 +103,23 @@ async function goHome() {
   }
 
   startTransition(() => {
-    window.location.href = "./index.html";
-  }, 280);
+    const opener = window.opener;
+
+    if (opener && !opener.closed) {
+      try {
+        opener.focus();
+        window.close();
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    window.setTimeout(() => {
+      if (!window.closed) {
+        window.location.replace("./index.html");
+      }
+    }, 40);
+  }, 220);
 }
 
 function showError(message) {
@@ -166,7 +150,7 @@ function syncFullscreenState() {
   if (frameWrap.classList.contains("is-loaded")) {
     playerStatus.textContent = isFullscreen
       ? "Fullscreen on. Press Enter to step back out."
-      : "Game loaded. Fullscreen is available, and Enter exits fullscreen.";
+      : "Game loaded. Press Homepage to return, and Enter exits fullscreen.";
   }
 }
 

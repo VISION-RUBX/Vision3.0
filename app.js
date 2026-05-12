@@ -1,20 +1,22 @@
 import {
+  APP_VERSION,
   STORAGE_KEYS,
   createMusicPlayer,
   escapeHtml,
   formatBytes,
   formatDisplayName,
+  formatTrackDisplayName,
+  initPerformanceMode,
   initFocusMode,
   initParticleField,
   loadJson,
   markPageReady,
-  mountMusicDock,
-  startTransition
-} from "./site.js";
+  mountMusicDock
+} from "./site.js?v=20260511-smooth-launch";
 
-const GAME_DATA_PATH = "./games.json";
-const MUSIC_DATA_PATH = "./music.json";
-const UPDATES_DATA_PATH = "./updates.json";
+const GAME_DATA_PATH = "./games.json?v=20260511-smooth-launch";
+const MUSIC_DATA_PATH = "./music.json?v=20260511-smooth-launch";
+const UPDATES_DATA_PATH = "./updates.json?v=20260511-smooth-launch";
 const CATEGORY_FILTERS = ["all", "popular", "mixed", ...Array.from("ABCDEFGHIJKLMNOPQRSTUVWXYZ")];
 
 const particleCanvas = document.getElementById("particleCanvas");
@@ -42,9 +44,12 @@ const musicPanel = document.getElementById("musicPanel");
 const updatesPanel = document.getElementById("updatesPanel");
 const tabButtons = [...document.querySelectorAll(".tab-button")];
 const musicDock = document.getElementById("musicDock");
+const gameActions = document.getElementById("gameActions");
+const showMoreGamesButton = document.getElementById("showMoreGames");
 const featuredTrackName = document.getElementById("featuredTrackName");
 const featuredTrackMeta = document.getElementById("featuredTrackMeta");
 const featuredTrackStatus = document.getElementById("featuredTrackStatus");
+const toggleMusicList = document.getElementById("toggleMusicList");
 
 let games = [];
 let tracks = [];
@@ -56,9 +61,27 @@ let previousMuteState = null;
 let lastMusicSummaryKey = "";
 let lastMusicListKey = "";
 let lastMusicListStateKey = "";
+let musicListCollapsed = sessionStorage.getItem(STORAGE_KEYS.musicListCollapsed) === "true";
+let gamePageSize = 96;
+let visibleGameLimit = gamePageSize;
+let pendingSearchFrame = 0;
+
+function updateMusicListToggle() {
+  if (!toggleMusicList) {
+    return;
+  }
+
+  const expanded = !musicListCollapsed;
+  toggleMusicList.setAttribute("aria-expanded", String(expanded));
+  toggleMusicList.querySelector("span").textContent = expanded ? "Hide Playlist" : "Show Playlist";
+}
 
 document.addEventListener("DOMContentLoaded", async () => {
   markPageReady();
+  syncStoredLauncherState();
+  const performanceProfile = initPerformanceMode();
+  gamePageSize = performanceProfile.lowPower ? 60 : 96;
+  visibleGameLimit = gamePageSize;
 
   const focusMode = initFocusMode(focusModeButton);
   const particles = initParticleField(particleCanvas);
@@ -87,15 +110,39 @@ document.addEventListener("DOMContentLoaded", async () => {
   await loadContent();
 });
 
+function syncStoredLauncherState() {
+  const savedVersion = sessionStorage.getItem(STORAGE_KEYS.buildVersion);
+  if (savedVersion === APP_VERSION) {
+    return;
+  }
+
+  sessionStorage.setItem(STORAGE_KEYS.buildVersion, APP_VERSION);
+  sessionStorage.setItem(STORAGE_KEYS.query, "");
+  sessionStorage.setItem(STORAGE_KEYS.quickFilter, "all");
+  sessionStorage.setItem(STORAGE_KEYS.tab, "games");
+  sessionStorage.removeItem(STORAGE_KEYS.scroll);
+  activeTab = "games";
+  categoryFilter = "all";
+}
+
+function resetGameLimit() {
+  visibleGameLimit = gamePageSize;
+}
+
 function wireEvents() {
   searchInput.addEventListener("input", () => {
     sessionStorage.setItem(STORAGE_KEYS.query, searchInput.value);
-    renderActiveTab();
+    resetGameLimit();
+    cancelAnimationFrame(pendingSearchFrame);
+    pendingSearchFrame = requestAnimationFrame(() => {
+      renderActiveTab();
+    });
   });
 
   clearSearchButton.addEventListener("click", () => {
     searchInput.value = "";
     sessionStorage.setItem(STORAGE_KEYS.query, "");
+    resetGameLimit();
     renderActiveTab();
     searchInput.focus();
   });
@@ -108,6 +155,7 @@ function wireEvents() {
 
     categoryFilter = button.dataset.filter || "all";
     sessionStorage.setItem(STORAGE_KEYS.quickFilter, categoryFilter);
+    resetGameLimit();
     renderFilterBar();
     renderActiveTab();
   });
@@ -116,9 +164,21 @@ function wireEvents() {
     button.addEventListener("click", () => {
       activeTab = button.dataset.tab || "games";
       sessionStorage.setItem(STORAGE_KEYS.tab, activeTab);
+      if (activeTab === "games") {
+        resetGameLimit();
+      }
       renderActiveTab();
     });
   });
+
+  toggleMusicList?.addEventListener("click", () => {
+    musicListCollapsed = !musicListCollapsed;
+    sessionStorage.setItem(STORAGE_KEYS.musicListCollapsed, String(musicListCollapsed));
+    updateMusicListToggle();
+    renderActiveTab();
+  });
+
+  updateMusicListToggle();
 
   gameGrid.addEventListener("click", event => {
     const link = event.target.closest(".game-card");
@@ -131,10 +191,21 @@ function wireEvents() {
     }
 
     event.preventDefault();
-    sessionStorage.setItem(STORAGE_KEYS.scroll, String(window.scrollY));
-    startTransition(() => {
-      window.location.href = link.href;
-    });
+    const popup = window.open("about:blank", "_blank");
+
+    if (!popup) {
+      window.location.assign(link.href);
+      return;
+    }
+
+    try {
+      popup.document.write(`<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Opening Vision Game...</title><style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#050505;color:#f6f6f6;font-family:Segoe UI,Arial,sans-serif}p{margin:0;opacity:.78;letter-spacing:.08em;text-transform:uppercase;font-size:.82rem}</style></head><body><p>Opening game...</p></body></html>`);
+      popup.document.close();
+    } catch (error) {
+      void error;
+    }
+
+    popup.location.replace(link.href);
   });
 
   musicList.addEventListener("click", event => {
@@ -144,6 +215,11 @@ function wireEvents() {
     }
 
     void musicController.selectByKey(button.dataset.trackKey, { autoplay: true });
+  });
+
+  showMoreGamesButton?.addEventListener("click", () => {
+    visibleGameLimit += gamePageSize;
+    renderGames();
   });
 }
 
@@ -166,8 +242,8 @@ async function loadContent() {
     tracks = Array.isArray(musicData)
       ? musicData.map(track => ({
           ...track,
-          displayName: formatDisplayName(track.name),
-          searchText: `${track.name} ${track.key}`.toLowerCase()
+          displayName: formatTrackDisplayName(track.name),
+          searchText: `${track.name} ${formatTrackDisplayName(track.name)} ${track.key}`.toLowerCase()
         }))
       : [];
 
@@ -268,14 +344,16 @@ function renderGames() {
 
     return game.searchText.includes(query);
   });
+  const visibleGames = filteredGames.slice(0, visibleGameLimit);
+  const hasMoreGames = visibleGames.length < filteredGames.length;
 
   clearSearchButton.hidden = query.length === 0;
   visibleGamesValue.textContent = String(filteredGames.length);
   statusText.textContent = query
     ? `${filteredGames.length} game result${filteredGames.length === 1 ? "" : "s"} for "${searchInput.value.trim()}".`
-    : `${filteredGames.length} validated game${filteredGames.length === 1 ? "" : "s"} ready to launch.`;
+    : `${filteredGames.length} game${filteredGames.length === 1 ? "" : "s"} ready to launch in a separate tab.`;
 
-  const nextMarkup = filteredGames
+  const nextMarkup = visibleGames
     .map((game, index) => createGameCardMarkup(game, index))
     .join("");
 
@@ -286,7 +364,13 @@ function renderGames() {
     updatesEmptyState.classList.add("hidden");
     updatesList.classList.add("hidden");
     musicList.classList.add("hidden");
-  });
+    gameActions?.classList.toggle("hidden", !hasMoreGames);
+    if (showMoreGamesButton) {
+      showMoreGamesButton.textContent = hasMoreGames
+        ? `Load More Games (${visibleGames.length}/${filteredGames.length})`
+        : "All Games Loaded";
+    }
+  }, { skipTransition: true });
 }
 
 function renderMusic() {
@@ -296,7 +380,7 @@ function renderMusic() {
   clearSearchButton.hidden = query.length === 0;
   statusText.textContent = query
     ? `${filteredTracks.length} music result${filteredTracks.length === 1 ? "" : "s"} for "${searchInput.value.trim()}".`
-    : `${tracks.length} Canva music track${tracks.length === 1 ? "" : "s"} integrated into Vision 3.0.`;
+    : `${tracks.length} Canva music track${tracks.length === 1 ? "" : "s"} integrated into Vision.`;
 
   const state = musicController?.getState();
   const signature = `${filteredTracks.map(track => track.key).join("|")}::${state?.activeTrack?.key || ""}::${state?.isPaused}`;
@@ -308,6 +392,7 @@ function renderMusic() {
 
     swapMarkup(musicList, markup, () => {
       musicList.classList.toggle("hidden", filteredTracks.length === 0);
+      musicList.classList.toggle("music-list-collapsed", musicListCollapsed && filteredTracks.length > 0);
       musicEmptyState.classList.toggle("hidden", filteredTracks.length !== 0);
       emptyState.classList.add("hidden");
       updatesEmptyState.classList.add("hidden");
@@ -318,6 +403,7 @@ function renderMusic() {
     lastMusicListKey = signature;
   } else {
     musicList.classList.toggle("hidden", filteredTracks.length === 0);
+    musicList.classList.toggle("music-list-collapsed", musicListCollapsed && filteredTracks.length > 0);
     musicEmptyState.classList.toggle("hidden", filteredTracks.length !== 0);
   }
 }
@@ -357,7 +443,7 @@ function handleMusicStateChange(state) {
   const summaryKey = `${track?.key || ""}::${state.isPaused}::${state.isLoading}::${state.errorMessage}`;
   if (summaryKey !== lastMusicSummaryKey) {
     featuredTrackName.textContent = track ? track.displayName : "No track selected";
-    featuredTrackMeta.textContent = track ? `${formatBytes(track.size)} ${track.contentType ? `• ${track.contentType.replace("audio/", "").toUpperCase()}` : ""}`.trim() : "Playlist offline";
+    featuredTrackMeta.textContent = track ? `${formatBytes(track.size)}${track.contentType ? ` - ${track.contentType.replace("audio/", "").toUpperCase()}` : ""}`.trim() : "Playlist offline";
     featuredTrackStatus.textContent = state.errorMessage || (state.isLoading ? "Loading track..." : state.isPaused ? "Ready to play" : "Now playing");
     lastMusicSummaryKey = summaryKey;
   }
@@ -401,6 +487,7 @@ function createGameCardMarkup(game, index) {
     <a
       class="game-card"
       href="play.html?game=${encodeURIComponent(game.key)}"
+      target="_blank"
       style="--stagger:${Math.min(index, 24)};"
       aria-label="Open ${escapeHtml(game.displayName)}"
     >
@@ -452,13 +539,13 @@ function createUpdateMarkup(update, index) {
   `;
 }
 
-function swapMarkup(target, markup, finalize) {
+function swapMarkup(target, markup, finalize, options = {}) {
   const apply = () => {
     target.innerHTML = markup;
     finalize();
   };
 
-  if (typeof document.startViewTransition === "function") {
+  if (!options.skipTransition && typeof document.startViewTransition === "function") {
     document.startViewTransition(apply);
     return;
   }

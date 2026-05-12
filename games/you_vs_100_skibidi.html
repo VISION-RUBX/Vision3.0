@@ -1,18 +1,13 @@
-<!DOCTYPE html>
-<!-- Ultimate Game Stash file--> 
-<!-- For the regularly updating doc go to https://docs.google.com/document/d/1_FmH3BlSBQI7FGgAQL59-ZPe8eCxs35wel6JUyVaG8Q/ -->
-
-
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en-us">
-
+<base href="https://cdn.jsdelivr.net/gh/bubbls/UGS-Assets@20f250e9a0681dfb9d75b995ffdc6ab33151345c/you%20vs%20100%20skibidi/">
 <head>
   <meta charset="utf-8">
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-  <title>google.com</title>
-  <link rel="shortcut icon" href="https://cdn.jsdelivr.net/gh/co6cohad/son@main/TemplateData/favicon.ico">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/co6cohad/son@main/TemplateData/style.css?v=2">
-  <link rel="manifest" href="https://cdn.jsdelivr.net/gh/co6cohad/son@main/manifest.webmanifest">
+  <title>You vs 100 Skibidi Toilets Unblocked</title>
+  <link rel="shortcut icon" href="TemplateData/favicon.ico">
+  <link rel="stylesheet" href="TemplateData/style.css?v=2">
+  <link rel="manifest" href="manifest.webmanifest">
 </head>
 
 <body>
@@ -27,9 +22,9 @@
     <div id="unity-warning"> </div>
   </div>
   <script>
-    window.addEventListener("load", function () {
+    window.addEventListener("load", function() {
       if ("serviceWorker" in navigator) {
-        navigator.serviceWorker.register("https://cdn.jsdelivr.net/gh/co6cohad/son@main/ServiceWorker.js");
+        navigator.serviceWorker.register("ServiceWorker.js");
       }
     });
 
@@ -55,7 +50,7 @@
       if (type == 'error') div.style = 'background: red; padding: 10px;';
       else {
         if (type == 'warning') div.style = 'background: yellow; padding: 10px;';
-        setTimeout(function () {
+        setTimeout(function() {
           warningBanner.removeChild(div);
           updateBannerVisibility();
         }, 5000);
@@ -63,7 +58,7 @@
       updateBannerVisibility();
     }
 
-    var buildUrl = "https://cdn.jsdelivr.net/gh/co6cohad/son@main/Build/";
+    var buildUrl = "Build";
     var loaderUrl = buildUrl + "/YouVsSkibidi_GD.loader.js";
     var config = {
       dataUrl: buildUrl + "/YouVsSkibidi_GD.data.unityweb",
@@ -93,7 +88,7 @@
       window.devicePixelRatio = 1;
     }
 
-    canvas.style.background = "url('') center / cover";
+    canvas.style.background = "url('" + buildUrl + "/YouVsSkibidi_GD.jpg.unityweb') center / cover";
     loadingBar.style.display = "block";
 
     var script = document.createElement("script");

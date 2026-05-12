@@ -5,8 +5,14 @@ export const STORAGE_KEYS = {
   letterFilter: "vision3.letterFilter",
   scroll: "vision3.scroll",
   focusMode: "vision3.focusMode",
-  musicState: "vision3.musicState"
+  musicState: "vision3.musicState",
+  musicListCollapsed: "vision3.musicListCollapsed",
+  buildVersion: "vision3.buildVersion",
+  musicDockCollapsed: "vision3.musicDockCollapsed",
+  musicDockHidden: "vision3.musicDockHidden"
 };
+
+export const APP_VERSION = "20260511-smooth-launch";
 
 const TITLE_SMALL_WORDS = new Set(["a", "an", "and", "as", "at", "by", "for", "in", "of", "on", "or", "the", "to", "vs"]);
 const UPPERCASE_TOKENS = new Set(["gba", "n64", "nfl", "nba", "nhl", "fnaf", "fps", "rpg", "btd", "csgo", "bas", "c.s"]);
@@ -15,6 +21,22 @@ export function markPageReady() {
   requestAnimationFrame(() => {
     document.body.classList.add("is-ready");
   });
+}
+
+export function initPerformanceMode() {
+  const prefersReducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ?? false;
+  const lowMemory = typeof navigator.deviceMemory === "number" && navigator.deviceMemory <= 4;
+  const lowCores = typeof navigator.hardwareConcurrency === "number" && navigator.hardwareConcurrency <= 4;
+  const lowPower = prefersReducedMotion || lowMemory || lowCores;
+
+  document.body.classList.toggle("performance-mode", lowPower);
+
+  return {
+    lowPower,
+    lowMemory,
+    lowCores,
+    prefersReducedMotion
+  };
 }
 
 export function startTransition(callback, delay = 240) {
@@ -52,6 +74,22 @@ export function formatDisplayName(value) {
     .join(" ")
     .replace(/\s+([.,!?])/g, "$1")
     .replace(/\s+-\s+/g, " - ");
+}
+
+export function formatTrackDisplayName(value) {
+  const original = String(value || "").trim();
+  if (!original) {
+    return "";
+  }
+
+  const cleaned = original
+    .replace(/[\s_-]*vision(?:\+|[0-9.]+)?\s*$/i, "")
+    .replace(/\s{2,}/g, " ")
+    .trim()
+    .replace(/[-_(\[]+\s*$/g, "")
+    .trim();
+
+  return formatDisplayName(cleaned || original);
 }
 
 export function formatDuration(seconds) {
@@ -144,8 +182,12 @@ export function initParticleField(canvas) {
   let dpr = 1;
   let animationId = 0;
   let focusMode = false;
+  let lastFrameTime = 0;
   let pointer = { x: 0, y: 0, active: false };
   let particles = [];
+  const performanceMode = document.body.classList.contains("performance-mode");
+  const prefersReducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ?? false;
+  const targetFrameLength = prefersReducedMotion ? 1000 / 24 : performanceMode ? 1000 / 30 : 1000 / 60;
 
   function setSize() {
     dpr = window.devicePixelRatio || 1;
@@ -160,7 +202,17 @@ export function initParticleField(canvas) {
   }
 
   function buildParticles() {
-    const targetCount = width < 720 ? 22 : width < 1200 ? 34 : 46;
+    const targetCount = performanceMode
+      ? width < 720
+        ? 8
+        : width < 1200
+          ? 12
+          : 18
+      : width < 720
+        ? 14
+        : width < 1200
+          ? 22
+          : 30;
     particles = Array.from({ length: targetCount }, () => ({
       x: Math.random() * width,
       y: Math.random() * height,
@@ -170,12 +222,19 @@ export function initParticleField(canvas) {
     }));
   }
 
-  function frame() {
+  function frame(now = 0) {
+    if (lastFrameTime && now - lastFrameTime < targetFrameLength) {
+      animationId = requestAnimationFrame(frame);
+      return;
+    }
+
+    lastFrameTime = now;
     context.clearRect(0, 0, width, height);
 
-    const pointAlpha = focusMode ? 0.18 : 0.34;
-    const lineAlpha = focusMode ? 0.05 : 0.12;
-    const maxDistance = focusMode ? 86 : 112;
+    const pointAlpha = focusMode ? 0.14 : performanceMode ? 0.24 : 0.34;
+    const lineAlpha = focusMode ? 0.04 : performanceMode ? 0.08 : 0.12;
+    const maxDistance = focusMode ? 76 : performanceMode ? 92 : 112;
+    const pointerRadius = performanceMode ? 92 : 120;
 
     for (const particle of particles) {
       particle.x += particle.vx;
@@ -193,15 +252,15 @@ export function initParticleField(canvas) {
         const dx = particle.x - pointer.x;
         const dy = particle.y - pointer.y;
         const distance = Math.hypot(dx, dy);
-        if (distance > 0 && distance < 120) {
-          const force = (120 - distance) / 1200;
+        if (distance > 0 && distance < pointerRadius) {
+          const force = (pointerRadius - distance) / (performanceMode ? 1700 : 1200);
           particle.vx += (dx / distance) * force;
           particle.vy += (dy / distance) * force;
         }
       }
 
-      particle.vx = clamp(particle.vx, -0.45, 0.45);
-      particle.vy = clamp(particle.vy, -0.45, 0.45);
+      particle.vx = clamp(particle.vx, -0.38, 0.38);
+      particle.vy = clamp(particle.vy, -0.38, 0.38);
 
       context.beginPath();
       context.fillStyle = `rgba(255,255,255,${pointAlpha})`;
@@ -484,10 +543,34 @@ export function mountMusicDock(root, controller) {
   const prevButton = root.querySelector("[data-music-prev]");
   const nextButton = root.querySelector("[data-music-next]");
   const muteButton = root.querySelector("[data-music-mute]");
+  const toggleButton = root.querySelector("[data-music-toggle]");
+  const closeButton = root.querySelector("[data-music-close]");
   const seek = root.querySelector("[data-music-seek]");
   const currentTime = root.querySelector("[data-track-time]");
   const duration = root.querySelector("[data-track-duration]");
   const volume = root.querySelector("[data-music-volume]");
+  const reopenButton = document.getElementById("musicDockReopen");
+  let isCollapsed = localStorage.getItem(STORAGE_KEYS.musicDockCollapsed) === "true";
+  let isHidden = localStorage.getItem(STORAGE_KEYS.musicDockHidden) === "true";
+
+  function syncDockUi() {
+    root.classList.toggle("hidden", isHidden);
+    root.classList.toggle("is-collapsed", isCollapsed && !isHidden);
+    reopenButton?.classList.toggle("hidden", !isHidden);
+
+    if (toggleButton) {
+      toggleButton.textContent = isCollapsed ? "Expand" : "Collapse";
+      toggleButton.setAttribute("aria-pressed", String(isCollapsed));
+    }
+
+    if (closeButton) {
+      closeButton.textContent = "Close Player";
+    }
+
+    if (reopenButton) {
+      reopenButton.textContent = "Open Music Player";
+    }
+  }
 
   playButton?.addEventListener("click", () => {
     void controller.togglePlayback();
@@ -508,13 +591,30 @@ export function mountMusicDock(root, controller) {
   volume?.addEventListener("input", event => {
     controller.setVolume(Number(event.target.value));
   });
+  toggleButton?.addEventListener("click", () => {
+    isCollapsed = !isCollapsed;
+    localStorage.setItem(STORAGE_KEYS.musicDockCollapsed, String(isCollapsed));
+    syncDockUi();
+  });
+  closeButton?.addEventListener("click", () => {
+    isHidden = true;
+    localStorage.setItem(STORAGE_KEYS.musicDockHidden, "true");
+    syncDockUi();
+  });
+  reopenButton?.addEventListener("click", () => {
+    isHidden = false;
+    localStorage.setItem(STORAGE_KEYS.musicDockHidden, "false");
+    syncDockUi();
+  });
 
   const unsubscribe = controller.subscribe(state => {
-    root.classList.remove("hidden");
+    if (!isHidden) {
+      root.classList.remove("hidden");
+    }
 
     const track = state.activeTrack;
-    title.textContent = track ? formatDisplayName(track.name) : "Music Offline";
-    meta.textContent = state.errorMessage || (track ? `${formatBytes(track.size)} ${track.contentType ? `• ${track.contentType.replace("audio/", "").toUpperCase()}` : ""}`.trim() : "No track selected");
+    title.textContent = track ? (track.displayName || formatTrackDisplayName(track.name)) : "Music Offline";
+    meta.textContent = state.errorMessage || (track ? `${formatBytes(track.size)}${track.contentType ? ` - ${track.contentType.replace("audio/", "").toUpperCase()}` : ""}`.trim() : "No track selected");
     playButton.textContent = state.isLoading ? "Loading..." : state.isPaused ? "Play" : "Pause";
     muteButton.textContent = state.muted ? "Unmute" : "Mute";
     currentTime.textContent = formatDuration(state.currentTime);
@@ -522,8 +622,10 @@ export function mountMusicDock(root, controller) {
     seek.max = String(Math.max(state.duration, 1));
     seek.value = String(Math.min(state.currentTime, state.duration || 0));
     volume.value = String(state.volume);
+    syncDockUi();
   });
 
+  syncDockUi();
   return unsubscribe;
 }
 

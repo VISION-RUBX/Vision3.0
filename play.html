@@ -4,9 +4,10 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#050505">
-  <title>Vision 3.0 Player</title>
+  <title>Vision</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23050505'/%3E%3Cpath d='M17 16h10l5 22 5-22h10L36 48h-8z' fill='%23f6f6f6'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="./styles.css">
-  <script type="module" src="./play.js" defer></script>
+  <script type="module" src="./play.js?v=20260511-smooth-launch" defer></script>
 </head>
 <body class="page page-play">
   <canvas id="particleCanvas" class="particle-canvas" aria-hidden="true"></canvas>
@@ -28,12 +29,12 @@
       </div>
 
       <div class="player-meta">
-        <p class="eyebrow">Validated Launch</p>
+        <p class="eyebrow">Launcher</p>
         <h1 id="playerTitle">Loading game...</h1>
-        <p id="playerMeta" class="panel-copy">Preparing local player...</p>
+        <p id="playerMeta" class="panel-copy">Preparing dedicated game tab...</p>
       </div>
 
-      <p id="playerStatus" class="player-status">Starting player...</p>
+      <p id="playerStatus" class="player-status">Starting dedicated player...</p>
     </header>
 
     <main class="player-main">
@@ -43,7 +44,6 @@
       </div>
 
       <section id="frameWrap" class="frame-wrap hidden" tabindex="-1">
-        <div id="frameLoading" class="frame-loading">Launching game...</div>
         <iframe
           id="gameFrame"
           title="Game player"
@@ -55,29 +55,5 @@
       </section>
     </main>
   </div>
-
-  <section id="musicDock" class="music-dock hidden" aria-label="Music player">
-    <div class="music-dock-main">
-      <div class="music-dock-copy">
-        <p class="eyebrow">Vision Music</p>
-        <h2 data-track-title>Loading playlist...</h2>
-        <p data-track-meta class="panel-copy">Pulling audio from the Canva archive.</p>
-      </div>
-
-      <div class="music-dock-controls">
-        <button type="button" class="control-button" data-music-prev>Prev</button>
-        <button type="button" class="control-button control-button-strong" data-music-play>Play</button>
-        <button type="button" class="control-button" data-music-next>Next</button>
-        <button type="button" class="control-button" data-music-mute>Mute</button>
-      </div>
-    </div>
-
-    <div class="music-dock-bottom">
-      <span data-track-time>0:00</span>
-      <input type="range" min="0" max="1" step="0.01" value="0" data-music-seek aria-label="Track progress">
-      <span data-track-duration>0:00</span>
-      <input class="volume-slider" type="range" min="0" max="1" step="0.01" value="0.72" data-music-volume aria-label="Volume">
-    </div>
-  </section>
 </body>
 </html>

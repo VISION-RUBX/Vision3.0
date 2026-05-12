@@ -4,9 +4,10 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#050505">
-  <title>Vision 3.0</title>
+  <title>Vision</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23050505'/%3E%3Cpath d='M17 16h10l5 22 5-22h10L36 48h-8z' fill='%23f6f6f6'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="./styles.css">
-  <script type="module" src="./app.js" defer></script>
+  <script type="module" src="./app.js?v=20260511-smooth-launch" defer></script>
 </head>
 <body class="page page-index">
   <canvas id="particleCanvas" class="particle-canvas" aria-hidden="true"></canvas>
@@ -15,7 +16,7 @@
   <div class="page-shell">
     <header class="topbar">
       <div class="brand-block">
-        <p class="eyebrow">Vision 3.0</p>
+        <p class="eyebrow">Vision</p>
         <h1>For whoever finds it</h1>
         <p class="intro-copy">
           Games, music, and updates rebuilt into one cleaner launcher.
@@ -50,7 +51,7 @@
     <section class="utility-band" aria-label="Launcher overview">
       <div class="stats-grid">
         <article class="stat-card">
-          <span class="stat-label">Validated Games</span>
+          <span class="stat-label">Launcher Games</span>
           <strong id="totalGamesValue">0</strong>
         </article>
         <article class="stat-card">
@@ -98,7 +99,7 @@
 
     <main class="launcher-main">
       <div id="loadingState" class="state-block">
-        <h2>Loading Vision 3.0...</h2>
+        <h2>Loading Vision...</h2>
         <p>Building games, music, and updates from local JSON files.</p>
       </div>
 
@@ -124,6 +125,9 @@
 
       <section id="gamesPanel" class="content-panel" role="tabpanel" aria-labelledby="gamesTab">
         <section id="gameGrid" class="game-grid hidden" aria-live="polite"></section>
+        <div id="gameActions" class="panel-actions hidden">
+          <button id="showMoreGames" class="ghost-button" type="button">Load More Games</button>
+        </div>
       </section>
 
       <section id="musicPanel" class="content-panel hidden" role="tabpanel" aria-labelledby="musicTab">
@@ -133,7 +137,12 @@
             <h2 id="featuredTrackName">Loading tracks...</h2>
             <p id="featuredTrackMeta" class="panel-copy">Fetching playlist details.</p>
           </div>
-          <p id="featuredTrackStatus" class="status-text">Preparing player...</p>
+          <div class="music-feature-actions">
+            <button id="toggleMusicList" class="ghost-button" type="button" aria-expanded="true">
+              <span>Hide Playlist</span>
+            </button>
+            <p id="featuredTrackStatus" class="status-text">Preparing player...</p>
+          </div>
         </section>
 
         <section id="musicList" class="music-list hidden" aria-live="polite"></section>
@@ -153,11 +162,17 @@
         <p data-track-meta class="panel-copy">Pulling audio from the Canva archive.</p>
       </div>
 
-      <div class="music-dock-controls">
-        <button type="button" class="control-button" data-music-prev>Prev</button>
-        <button type="button" class="control-button control-button-strong" data-music-play>Play</button>
-        <button type="button" class="control-button" data-music-next>Next</button>
-        <button type="button" class="control-button" data-music-mute>Mute</button>
+      <div class="music-dock-side">
+        <div class="music-dock-actions">
+          <button type="button" class="control-button" data-music-toggle>Collapse</button>
+          <button type="button" class="control-button" data-music-close>Hide</button>
+        </div>
+        <div class="music-dock-controls">
+          <button type="button" class="control-button" data-music-prev>Prev</button>
+          <button type="button" class="control-button control-button-strong" data-music-play>Play</button>
+          <button type="button" class="control-button" data-music-next>Next</button>
+          <button type="button" class="control-button" data-music-mute>Mute</button>
+        </div>
       </div>
     </div>
 
@@ -168,5 +183,7 @@
       <input class="volume-slider" type="range" min="0" max="1" step="0.01" value="0.72" data-music-volume aria-label="Volume">
     </div>
   </section>
+
+  <button id="musicDockReopen" class="ghost-button music-dock-reopen hidden" type="button">Open Music Player</button>
 </body>
 </html>

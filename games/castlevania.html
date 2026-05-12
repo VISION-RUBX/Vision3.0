@@ -1,8 +1,5 @@
 <!DOCTYPE html>
 <html>
-  <!-- Ultimate Game Stash file-->
-  <!-- For the regularly updating doc go to https://docs.google.com/document/d/1_FmH3BlSBQI7FGgAQL59-ZPe8eCxs35wel6JUyVaG8Q/ -->
-
   <head>
     <script src="//www.google.com/jsapi"></script>
     <script>
@@ -80,12 +77,12 @@
         document.getElementById("game").style.display = "block";
         document.getElementById("startButton").style.display = "none";
         EJS_player = "#game";
-        EJS_core = "gba";
+        EJS_core = "nes";
         EJS_color = "#000000";
         EJS_startOnLoaded = true;
         EJS_pathtodata = "https://cdn.jsdelivr.net/gh/genizy/emu@master/";
         EJS_gameUrl =
-          "https://cdn.jsdelivr.net/gh/a456pur/seraph@81f551ca0aa8e3d6018d32d8ac5904ac9bc78f76/games/castlevania/Classic%20NES%20Series%20-%20Castlevania%20(USA).gba";
+          "https://cdn.jsdelivr.net/gh/bubbls/UGS-file-encryption@1b9352b1b6cb640382ee9f938abbdf61874d2d35/Castlevania%20(USA).zip";
         loadGame();
       }
       document
@@ -94,6 +91,10 @@
       function loadGame() {
         var script = document.createElement("script");
         script.src = "https://cdn.jsdelivr.net/gh/genizy/emu@master/loader.js";
+        document.body.appendChild(script);
+        var script = document.createElement("script");
+        script.src =
+          "https://cdn.jsdelivr.net/gh/a456pur/seraph@ae2fcc6d6a9cd051654fcc0519080db1f79cf2a7/storage/js/cloak.js";
         document.body.appendChild(script);
       }
     </script>

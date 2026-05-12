@@ -2,6 +2,8 @@
 
 GitHub Pages launcher for validated games, local music playback, and updates.
 
+Deploys from the repo root on GitHub Pages.
+
 ## Main files
 
 - `index.html`: launcher homepage
@@ -29,6 +31,8 @@ For music or game source rebuilds:
 1. Run:
 
 ```powershell
+$env:VISION_GAMES_HTML_SOURCE_URL = "your html export url"
+$env:VISION_GAMES_TEXT_SOURCE_URL = "your text export url"
 node .\scripts\build-manifests.mjs
 ```
 
@@ -53,8 +57,6 @@ node .\scripts\build-manifests.mjs
     "platform": "Web",
     "popular": true,
     "order": 5,
-    "fileId": "1wDO0ksBgJdb4PVn7GzaAtwJDpkoS3Es4",
-    "sourceUrl": "https://drive.google.com/file/d/1wDO0ksBgJdb4PVn7GzaAtwJDpkoS3Es4/view?usp=drive_link",
     "path": "./games/99_balls.html"
   }
 ]
