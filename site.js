@@ -4,16 +4,22 @@ export const STORAGE_KEYS = {
   quickFilter: "vision3.quickFilter",
   letterFilter: "vision3.letterFilter",
   scroll: "vision3.scroll",
-  focusMode: "vision3.focusMode",
+  theme: "vision3.theme",
   musicState: "vision3.musicState",
   musicListCollapsed: "vision3.musicListCollapsed",
   buildVersion: "vision3.buildVersion",
   musicDockCollapsed: "vision3.musicDockCollapsed",
   musicDockHidden: "vision3.musicDockHidden",
-  flagLeft: "vision3.flagLeft"
+  flagLeft: "vision3.flagLeft.v2"
 };
 
-export const APP_VERSION = "20260511-flag-marker";
+export const APP_VERSION = "20260520-vision-refresh";
+export const THEME_OPTIONS = [
+  { key: "noir", label: "Noir" },
+  { key: "graphite", label: "Graphite" },
+  { key: "frost", label: "Frost" },
+  { key: "ember", label: "Ember" }
+];
 
 const TITLE_SMALL_WORDS = new Set(["a", "an", "and", "as", "at", "by", "for", "in", "of", "on", "or", "the", "to", "vs"]);
 const UPPERCASE_TOKENS = new Set(["gba", "n64", "nfl", "nba", "nhl", "fnaf", "fps", "rpg", "btd", "csgo", "bas", "c.s"]);
@@ -116,50 +122,78 @@ export function formatBytes(bytes) {
   return `${Math.round(bytes / 1024)} KB`;
 }
 
-export function initFocusMode(button) {
-  let enabled = localStorage.getItem(STORAGE_KEYS.focusMode) === "true";
+export function getStoredTheme() {
+  const savedTheme = localStorage.getItem(STORAGE_KEYS.theme) || "";
+  return THEME_OPTIONS.some(option => option.key === savedTheme) ? savedTheme : "noir";
+}
+
+export function applyTheme(themeKey) {
+  const nextTheme = THEME_OPTIONS.some(option => option.key === themeKey) ? themeKey : "noir";
+  document.body.dataset.theme = nextTheme;
+  localStorage.setItem(STORAGE_KEYS.theme, nextTheme);
+  return nextTheme;
+}
+
+export function initTheme(select) {
+  let theme = applyTheme(getStoredTheme());
   const listeners = new Set();
 
-  function emit() {
-    document.body.classList.toggle("focus-mode", enabled);
-    localStorage.setItem(STORAGE_KEYS.focusMode, String(enabled));
-    updateButton();
-    listeners.forEach(listener => listener(enabled));
-  }
-
-  function updateButton() {
-    if (!button) {
-      return;
+  function syncSelect() {
+    if (select) {
+      select.value = theme;
     }
-
-    button.classList.toggle("is-active", enabled);
-    button.setAttribute("aria-pressed", String(enabled));
-    button.querySelector("[data-focus-label]")?.replaceChildren(document.createTextNode(enabled ? "Focus On" : "Focus Mode"));
   }
 
-  button?.addEventListener("click", () => {
-    enabled = !enabled;
+  function emit() {
+    syncSelect();
+    listeners.forEach(listener => listener(theme));
+  }
+
+  select?.addEventListener("change", event => {
+    theme = applyTheme(event.target.value);
     emit();
   });
 
-  emit();
+  syncSelect();
 
   return {
-    isEnabled() {
-      return enabled;
+    getTheme() {
+      return theme;
     },
-    setEnabled(nextValue) {
-      enabled = Boolean(nextValue);
+    setTheme(nextTheme) {
+      theme = applyTheme(nextTheme);
       emit();
+      return theme;
     },
     subscribe(listener) {
       listeners.add(listener);
-      listener(enabled);
+      listener(theme);
       return () => {
         listeners.delete(listener);
       };
     }
   };
+}
+
+export function openAboutBlankWindow(url, options = {}) {
+  const popup = window.open("about:blank", "_blank");
+  if (!popup) {
+    window.location.assign(url);
+    return null;
+  }
+
+  const title = options.title || "Opening Vision...";
+  const message = options.message || "Loading...";
+
+  try {
+    popup.document.write(`<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>${escapeHtml(title)}</title><style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#050505;color:#f6f6f6;font-family:Segoe UI,Arial,sans-serif}main{display:grid;gap:12px;justify-items:center;padding:32px;text-align:center}strong{font-size:1rem;letter-spacing:.08em;text-transform:uppercase}p{margin:0;opacity:.72;line-height:1.6;max-width:28rem}</style></head><body><main><strong>${escapeHtml(title)}</strong><p>${escapeHtml(message)}</p></main></body></html>`);
+    popup.document.close();
+  } catch (error) {
+    void error;
+  }
+
+  popup.location.replace(url);
+  return popup;
 }
 
 export function initParticleField(canvas) {
@@ -182,7 +216,6 @@ export function initParticleField(canvas) {
   let height = 0;
   let dpr = 1;
   let animationId = 0;
-  let focusMode = false;
   let lastFrameTime = 0;
   let pointer = { x: 0, y: 0, active: false };
   let particles = [];
@@ -232,9 +265,9 @@ export function initParticleField(canvas) {
     lastFrameTime = now;
     context.clearRect(0, 0, width, height);
 
-    const pointAlpha = focusMode ? 0.14 : performanceMode ? 0.24 : 0.34;
-    const lineAlpha = focusMode ? 0.04 : performanceMode ? 0.08 : 0.12;
-    const maxDistance = focusMode ? 76 : performanceMode ? 92 : 112;
+    const pointAlpha = performanceMode ? 0.24 : 0.34;
+    const lineAlpha = performanceMode ? 0.08 : 0.12;
+    const maxDistance = performanceMode ? 92 : 112;
     const pointerRadius = performanceMode ? 92 : 120;
 
     for (const particle of particles) {
@@ -315,9 +348,7 @@ export function initParticleField(canvas) {
   window.addEventListener("pointerleave", handlePointerLeave);
 
   return {
-    setFocusMode(value) {
-      focusMode = Boolean(value);
-    },
+    setFocusMode() {},
     destroy() {
       cancelAnimationFrame(animationId);
       window.removeEventListener("resize", setSize);

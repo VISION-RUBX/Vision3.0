@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#050505">
+  <title>Vision Leaderboard</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23050505'/%3E%3Cpath d='M17 16h10l5 22 5-22h10L36 48h-8z' fill='%23f6f6f6'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="./styles.css">
+  <script type="module" src="./leaderboard.js?v=20260520-vision-refresh" defer></script>
+</head>
+<body class="page page-leaderboard">
+  <canvas id="particleCanvas" class="particle-canvas" aria-hidden="true"></canvas>
+  <div class="page-transition" aria-hidden="true"></div>
+
+  <div class="page-shell page-shell-leaderboard">
+    <header class="topbar topbar-account">
+      <div class="brand-block">
+        <p class="eyebrow">Vision</p>
+        <h1>Leaderboard</h1>
+        <p class="intro-copy">
+          You can be on the leaderboard. Customize your avatar. Compete for most time played.
+        </p>
+      </div>
+
+      <div class="topbar-tools">
+        <div class="header-actions">
+          <label class="theme-shell" for="themeSelect">
+            <span class="theme-label">Theme</span>
+            <select id="themeSelect" class="theme-select" aria-label="Theme">
+              <option value="noir">Noir</option>
+              <option value="graphite">Graphite</option>
+              <option value="frost">Frost</option>
+              <option value="ember">Ember</option>
+            </select>
+          </label>
+          <button id="openBlankButton" class="ghost-button" type="button">Open Blank</button>
+          <a class="ghost-button" href="./account.html">Account</a>
+          <a class="ghost-button" href="./index.html">Homepage</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="leaderboard-main">
+      <section class="leaderboard-intro">
+        <article class="intro-card">
+          <span class="stat-label">Compete</span>
+          <strong>You can be on the leaderboard</strong>
+          <p class="panel-copy">Logged-in players can save a profile, lock in a username, and climb with total time spent on the site.</p>
+        </article>
+        <article class="intro-card">
+          <span class="stat-label">Style</span>
+          <strong>Customize your avatar</strong>
+          <p class="panel-copy">Every account gets an 8-bit gaming avatar with swappable clothes, hair, accessories, and colors.</p>
+        </article>
+        <article class="intro-card">
+          <span class="stat-label">Time</span>
+          <strong>Compete for most time played</strong>
+          <p class="panel-copy">The board ranks by total tracked playtime, so the people who stay on Vision rise to the top.</p>
+        </article>
+      </section>
+
+      <section id="leaderboardBackendNotice" class="state-block hidden" aria-live="polite"></section>
+
+      <section class="leaderboard-layout">
+        <aside class="leaderboard-sidecard">
+          <canvas id="currentUserAvatarCanvas" class="profile-avatar-canvas profile-avatar-canvas-large" width="128" height="128" aria-hidden="true"></canvas>
+          <div>
+            <p class="eyebrow">Your Spot</p>
+            <h2 id="currentUserName">Guest</h2>
+            <p id="currentUserStatus" class="panel-copy">Sign in to save your time and show up on the leaderboard.</p>
+          </div>
+          <div class="profile-card-stats">
+            <div class="profile-card-stat">
+              <span class="stat-label">Rank</span>
+              <strong id="currentUserRank">--</strong>
+            </div>
+            <div class="profile-card-stat">
+              <span class="stat-label">Time Played</span>
+              <strong id="currentUserTime">0m</strong>
+            </div>
+          </div>
+          <a class="ghost-button" href="./account.html">Open Account</a>
+        </aside>
+
+        <section class="leaderboard-board">
+          <div class="surface-header">
+            <div>
+              <p class="eyebrow">Global</p>
+              <h2>Top Vision Players</h2>
+            </div>
+            <p id="leaderboardStatus" class="panel-copy">Loading leaderboard data.</p>
+          </div>
+          <div id="leaderboardList" class="leaderboard-list" aria-live="polite"></div>
+        </section>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

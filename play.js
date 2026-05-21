@@ -1,20 +1,23 @@
 import {
   formatDisplayName,
+  initTheme,
   initPerformanceMode,
-  initFocusMode,
   initParticleField,
   loadJson,
   markPageReady,
+  openAboutBlankWindow,
   startTransition
-} from "./site.js?v=20260511-flag-marker";
+} from "./site.js?v=20260520-vision-refresh";
+import { initAuthSession, saveThemePreference, startPlaytimeTracker, subscribeToSession } from "./auth-service.js?v=20260520-vision-refresh";
 
-const GAME_DATA_PATH = "./games.json?v=20260511-flag-marker";
+const GAME_DATA_PATH = "./games.json?v=20260520-vision-refresh";
 
 const particleCanvas = document.getElementById("particleCanvas");
 const homepageButton = document.getElementById("homepageButton");
+const openBlankButton = document.getElementById("openBlankButton");
 const fullscreenButton = document.getElementById("fullscreenButton");
 const fullscreenLabel = document.getElementById("fullscreenLabel");
-const focusModeButton = document.getElementById("focusModeButton");
+const themeSelect = document.getElementById("themeSelect");
 const playerTitle = document.getElementById("playerTitle");
 const playerMeta = document.getElementById("playerMeta");
 const playerStatus = document.getElementById("playerStatus");
@@ -27,14 +30,26 @@ let leaving = false;
 document.addEventListener("DOMContentLoaded", async () => {
   markPageReady();
   initPerformanceMode();
-
-  const focusMode = initFocusMode(focusModeButton);
-  const particles = initParticleField(particleCanvas);
-  focusMode.subscribe(enabled => {
-    particles.setFocusMode(enabled);
+  initParticleField(particleCanvas);
+  const theme = initTheme(themeSelect);
+  initAuthSession();
+  startPlaytimeTracker();
+  subscribeToSession(session => {
+    if (session?.profile?.theme) {
+      themeSelect.value = session.profile.theme;
+    }
+  });
+  theme.subscribe(nextTheme => {
+    void saveThemePreference(nextTheme).catch(() => {});
   });
 
   homepageButton.addEventListener("click", goHome);
+  openBlankButton?.addEventListener("click", () => {
+    openAboutBlankWindow(window.location.href, {
+      title: "Opening Vision",
+      message: "Launching this page in a clean tab."
+    });
+  });
   fullscreenButton.addEventListener("click", toggleFullscreen);
   document.addEventListener("fullscreenchange", syncFullscreenState);
   document.addEventListener("keydown", handleKeydown, true);
@@ -90,8 +105,8 @@ async function goHome() {
 
   leaving = true;
   homepageButton.disabled = true;
+  openBlankButton.disabled = true;
   fullscreenButton.disabled = true;
-  focusModeButton.disabled = true;
   playerStatus.textContent = "Returning to homepage...";
 
   if (document.fullscreenElement === frameWrap) {

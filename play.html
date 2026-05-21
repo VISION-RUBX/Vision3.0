@@ -7,7 +7,7 @@
   <title>Vision</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23050505'/%3E%3Cpath d='M17 16h10l5 22 5-22h10L36 48h-8z' fill='%23f6f6f6'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="./styles.css">
-  <script type="module" src="./play.js?v=20260511-flag-marker" defer></script>
+  <script type="module" src="./play.js?v=20260520-vision-refresh" defer></script>
 </head>
 <body class="page page-play">
   <canvas id="particleCanvas" class="particle-canvas" aria-hidden="true"></canvas>
@@ -20,12 +20,19 @@
           <span aria-hidden="true">&larr;</span>
           <span>Homepage</span>
         </button>
+        <button id="openBlankButton" class="ghost-button" type="button">Open Blank</button>
         <button id="fullscreenButton" class="ghost-button" type="button">
           <span id="fullscreenLabel">Fullscreen</span>
         </button>
-        <button id="focusModeButton" class="ghost-button" type="button" aria-pressed="false">
-          <span data-focus-label>Focus Mode</span>
-        </button>
+        <label class="theme-shell player-theme-shell" for="themeSelect">
+          <span class="theme-label">Theme</span>
+          <select id="themeSelect" class="theme-select" aria-label="Theme">
+            <option value="noir">Noir</option>
+            <option value="graphite">Graphite</option>
+            <option value="frost">Frost</option>
+            <option value="ember">Ember</option>
+          </select>
+        </label>
       </div>
 
       <div class="player-meta">

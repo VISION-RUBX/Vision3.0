@@ -1,6 +1,6 @@
 # Vision 3.0
 
-GitHub Pages launcher for validated games, local music playback, and updates.
+GitHub Pages launcher for validated games, local music playback, saved accounts, avatars, themes, and leaderboard tracking.
 
 Deploys from the repo root on GitHub Pages.
 
@@ -8,12 +8,20 @@ Deploys from the repo root on GitHub Pages.
 
 - `index.html`: launcher homepage
 - `play.html`: game player page
-- `games.json`: validated game manifest
+- `account.html`: sign in, sign up, avatar, and profile management
+- `leaderboard.html`: leaderboard explainer and ranking page
+- `games.json`: ready-only game manifest
 - `music.json`: local music manifest
 - `updates.json`: update posts
 - `app.js`: homepage logic
 - `play.js`: player logic
-- `site.js`: shared focus mode, particles, transitions, and music dock
+- `account.js`: account page logic
+- `leaderboard.js`: leaderboard page logic
+- `auth-service.js`: Firebase auth, profile, and leaderboard data layer
+- `avatar.js`: 8-bit avatar renderer and avatar defaults
+- `firebase-config.js`: Firebase project configuration placeholder
+- `firestore.rules`: Firestore security rules reference
+- `site.js`: shared particles, themes, transitions, and music dock
 - `styles.css`: shared UI styling
 - `games/`: local validated game files
 - `music/`: local audio files pulled from the Canva page
@@ -25,6 +33,30 @@ For normal content updates:
 
 1. Edit `updates.json` to change the Updates tab.
 2. Commit and push.
+
+## Firebase account setup
+
+To turn on email/password login, Google login, synced profiles, avatars, and the leaderboard:
+
+1. Create a Firebase project.
+2. Enable Firebase Authentication:
+   - Email/Password
+   - Google
+3. Create a Firestore database.
+4. Add `vision-rubx.github.io` to the authorized domains in Firebase Authentication.
+5. Replace the placeholder values in `firebase-config.js`.
+6. Apply the rules in `firestore.rules` to your Firestore project.
+
+### Owner / admin account
+
+The UI only exposes the owner panel when a user document has `role: "owner"`.
+
+For a secure owner account:
+
+1. Create your account normally.
+2. Set your Firestore user document role to `owner`, or assign an owner/admin custom claim from a privileged Firebase Admin environment.
+
+Do not rely on client-side hidden emails or JavaScript-only checks for admin access.
 
 For music or game source rebuilds:
 

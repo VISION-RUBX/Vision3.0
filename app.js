@@ -7,33 +7,38 @@ import {
   formatDisplayName,
   formatTrackDisplayName,
   initPerformanceMode,
-  initFocusMode,
+  initTheme,
   initParticleField,
   loadJson,
   markPageReady,
-  mountMusicDock
-} from "./site.js?v=20260511-flag-marker";
+  mountMusicDock,
+  openAboutBlankWindow
+} from "./site.js?v=20260520-vision-refresh";
+import { createDefaultAvatar, renderAvatarCanvas } from "./avatar.js?v=20260520-vision-refresh";
+import { initAuthSession, saveThemePreference, startPlaytimeTracker, subscribeToSession } from "./auth-service.js?v=20260520-vision-refresh";
 
-const GAME_DATA_PATH = "./games.json?v=20260511-flag-marker";
-const MUSIC_DATA_PATH = "./music.json?v=20260511-flag-marker";
-const UPDATES_DATA_PATH = "./updates.json?v=20260511-flag-marker";
+const GAME_DATA_PATH = "./games.json?v=20260520-vision-refresh";
+const MUSIC_DATA_PATH = "./music.json?v=20260520-vision-refresh";
+const UPDATES_DATA_PATH = "./updates.json?v=20260520-vision-refresh";
 const CATEGORY_FILTERS = ["all", "popular", "mixed", ...Array.from("ABCDEFGHIJKLMNOPQRSTUVWXYZ")];
 const FLAG_COUNTER_API = "https://api.countapi.xyz";
 const FLAG_COUNTERS = {
   production: {
     namespace: "vision-rubx.github.io",
-    key: "vision3-flags-v1"
+    key: "vision3-flags-v2"
   },
   development: {
     namespace: "vision-rubx.github.io-dev",
-    key: "vision3-flags-v1"
+    key: "vision3-flags-v2"
   }
 };
 
 const particleCanvas = document.getElementById("particleCanvas");
 const searchInput = document.getElementById("searchInput");
 const clearSearchButton = document.getElementById("clearSearch");
-const focusModeButton = document.getElementById("focusModeButton");
+const themeSelect = document.getElementById("themeSelect");
+const openBlankButton = document.getElementById("openBlankButton");
+const accountButton = document.getElementById("accountButton");
 const statusText = document.getElementById("statusText");
 const loadingState = document.getElementById("loadingState");
 const errorState = document.getElementById("errorState");
@@ -65,6 +70,11 @@ const leaveFlagButton = document.getElementById("leaveFlagButton");
 const flagCountValue = document.getElementById("flagCountValue");
 const flagSummary = document.getElementById("flagSummary");
 const flagStatus = document.getElementById("flagStatus");
+const profilePreviewCanvas = document.getElementById("profilePreviewCanvas");
+const profilePanelTitle = document.getElementById("profilePanelTitle");
+const profilePanelStatus = document.getElementById("profilePanelStatus");
+const profilePanelTime = document.getElementById("profilePanelTime");
+const profilePanelAction = document.getElementById("profilePanelAction");
 
 let games = [];
 let tracks = [];
@@ -72,7 +82,6 @@ let updates = [];
 let musicController = null;
 let activeTab = sessionStorage.getItem(STORAGE_KEYS.tab) || "games";
 let categoryFilter = sessionStorage.getItem(STORAGE_KEYS.quickFilter) || "all";
-let previousMuteState = null;
 let lastMusicSummaryKey = "";
 let lastMusicListKey = "";
 let lastMusicListStateKey = "";
@@ -106,33 +115,21 @@ document.addEventListener("DOMContentLoaded", async () => {
   const performanceProfile = initPerformanceMode();
   gamePageSize = performanceProfile.lowPower ? 60 : 96;
   visibleGameLimit = gamePageSize;
-
-  const focusMode = initFocusMode(focusModeButton);
-  const particles = initParticleField(particleCanvas);
-  focusMode.subscribe(enabled => {
-    particles.setFocusMode(enabled);
-
-    if (!musicController) {
-      return;
-    }
-
-    if (enabled) {
-      previousMuteState = musicController.getState().muted;
-      musicController.setMuted(true);
-      return;
-    }
-
-    if (previousMuteState !== null) {
-      musicController.setMuted(previousMuteState);
-      previousMuteState = null;
-    }
-  });
+  initParticleField(particleCanvas);
+  const theme = initTheme(themeSelect);
 
   searchInput.value = sessionStorage.getItem(STORAGE_KEYS.query) || "";
   renderFilterBar();
   wireEvents();
   updateFlagUi();
   void loadFlagCounter();
+  initAuthSession();
+  subscribeToSession(handleSessionChange);
+  startPlaytimeTracker();
+  theme.subscribe(nextTheme => {
+    void saveThemePreference(nextTheme).catch(() => {});
+  });
+  renderGuestProfile();
   await loadContent();
 });
 
@@ -156,6 +153,13 @@ function resetGameLimit() {
 }
 
 function wireEvents() {
+  openBlankButton?.addEventListener("click", () => {
+    openAboutBlankWindow(window.location.href, {
+      title: "Opening Vision",
+      message: "Launching the full Vision launcher in a clean tab."
+    });
+  });
+
   searchInput.addEventListener("input", () => {
     sessionStorage.setItem(STORAGE_KEYS.query, searchInput.value);
     resetGameLimit();
@@ -221,21 +225,10 @@ function wireEvents() {
     }
 
     event.preventDefault();
-    const popup = window.open("about:blank", "_blank");
-
-    if (!popup) {
-      window.location.assign(link.href);
-      return;
-    }
-
-    try {
-      popup.document.write(`<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Opening Vision Game...</title><style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#050505;color:#f6f6f6;font-family:Segoe UI,Arial,sans-serif}p{margin:0;opacity:.78;letter-spacing:.08em;text-transform:uppercase;font-size:.82rem}</style></head><body><p>Opening game...</p></body></html>`);
-      popup.document.close();
-    } catch (error) {
-      void error;
-    }
-
-    popup.location.replace(link.href);
+    openAboutBlankWindow(link.href, {
+      title: "Opening Vision Game",
+      message: "Launching the game in its own clean tab."
+    });
   });
 
   musicList.addEventListener("click", event => {
@@ -298,10 +291,6 @@ async function loadContent() {
     musicController = createMusicPlayer(tracks);
     mountMusicDock(musicDock, musicController);
     musicController.subscribe(handleMusicStateChange);
-    if (document.body.classList.contains("focus-mode")) {
-      previousMuteState = musicController.getState().muted;
-      musicController.setMuted(true);
-    }
 
     loadingState.classList.add("hidden");
     renderActiveTab();
@@ -600,6 +589,43 @@ function restoreScroll() {
   requestAnimationFrame(() => {
     window.scrollTo({ top: savedScroll, behavior: "auto" });
   });
+}
+
+function handleSessionChange(session) {
+  if (!session.user || !session.profile) {
+    renderGuestProfile(session.backendMessage);
+    return;
+  }
+
+  renderAvatarCanvas(profilePreviewCanvas, session.profile.avatar || createDefaultAvatar(session.user.email || session.user.uid));
+  profilePanelTitle.textContent = session.profile.username || "Finish Your Profile";
+  profilePanelStatus.textContent = session.profile.username
+    ? `Signed in as ${session.profile.email || "Vision player"}. Your theme, avatar, and leaderboard time save automatically.`
+    : "Your account is live. Finish your username and avatar to show up on the leaderboard.";
+  profilePanelTime.textContent = formatCompactDuration(session.profile.totalTimeMs || 0);
+  profilePanelAction.textContent = session.profile.username ? "Edit Profile" : "Finish Setup";
+  accountButton.textContent = session.profile.username || "Account";
+  themeSelect.value = session.profile.theme || themeSelect.value;
+}
+
+function renderGuestProfile(backendMessage = "") {
+  renderAvatarCanvas(profilePreviewCanvas, createDefaultAvatar("guest"));
+  profilePanelTitle.textContent = "Guest Mode";
+  profilePanelStatus.textContent = backendMessage || "Themes and the launcher work now. Accounts unlock saved avatars, usernames, and leaderboard time.";
+  profilePanelTime.textContent = "0m";
+  profilePanelAction.textContent = "Open Account";
+  accountButton.textContent = "Account";
+}
+
+function formatCompactDuration(totalMs) {
+  const totalMinutes = Math.max(0, Math.round(Number(totalMs || 0) / 60000));
+  if (totalMinutes < 60) {
+    return `${totalMinutes}m`;
+  }
+
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  return minutes ? `${hours}h ${minutes}m` : `${hours}h`;
 }
 
 function getFlagCounterConfig() {

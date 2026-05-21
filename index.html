@@ -7,7 +7,7 @@
   <title>Vision</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23050505'/%3E%3Cpath d='M17 16h10l5 22 5-22h10L36 48h-8z' fill='%23f6f6f6'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="./styles.css">
-  <script type="module" src="./app.js?v=20260511-flag-marker" defer></script>
+  <script type="module" src="./app.js?v=20260520-vision-refresh" defer></script>
 </head>
 <body class="page page-index">
   <canvas id="particleCanvas" class="particle-canvas" aria-hidden="true"></canvas>
@@ -17,9 +17,9 @@
     <header class="topbar">
       <div class="brand-block">
         <p class="eyebrow">Vision</p>
-        <h1>For whoever finds it</h1>
+        <h1>Vision</h1>
         <p class="intro-copy">
-          Games, music, and updates rebuilt into one cleaner launcher.
+          Cleaner launch tabs, live accounts, custom themes, and the games that still actually work.
         </p>
       </div>
 
@@ -41,14 +41,23 @@
         </label>
 
         <div class="header-actions">
-          <button id="focusModeButton" class="ghost-button" type="button" aria-pressed="false">
-            <span data-focus-label>Focus Mode</span>
-          </button>
+          <label class="theme-shell" for="themeSelect">
+            <span class="theme-label">Theme</span>
+            <select id="themeSelect" class="theme-select" aria-label="Theme">
+              <option value="noir">Noir</option>
+              <option value="graphite">Graphite</option>
+              <option value="frost">Frost</option>
+              <option value="ember">Ember</option>
+            </select>
+          </label>
+          <button id="openBlankButton" class="ghost-button" type="button">Open Blank</button>
+          <a id="leaderboardButton" class="ghost-button" href="./leaderboard.html">Leaderboard</a>
+          <a id="accountButton" class="ghost-button" href="./account.html">Account</a>
         </div>
       </div>
     </header>
 
-    <section class="utility-band" aria-label="Launcher overview">
+    <section class="utility-band utility-band-wide" aria-label="Launcher overview">
       <div class="stats-grid">
         <article class="stat-card">
           <span class="stat-label">Launcher Games</span>
@@ -69,6 +78,24 @@
         <div class="request-actions">
           <a class="ghost-button" href="https://forms.gle/Krq62fJo7pZ1zXn76" target="_blank" rel="noreferrer">Request Game</a>
           <a class="ghost-button" href="https://docs.google.com/forms/d/e/1FAIpQLScHAYvj9j1soK5q5A3zk-YH9Jgsadpuv39W3GNm6ybqSELcxg/viewform?usp=dialog" target="_blank" rel="noreferrer">Request Music</a>
+        </div>
+      </aside>
+
+      <aside class="profile-panel" aria-live="polite">
+        <div class="profile-panel-main">
+          <canvas id="profilePreviewCanvas" class="profile-avatar-canvas" width="96" height="96" aria-hidden="true"></canvas>
+          <div class="profile-panel-copy">
+            <p class="eyebrow">Profile</p>
+            <h2 id="profilePanelTitle">Guest Mode</h2>
+            <p id="profilePanelStatus" class="panel-copy">Themes and the launcher work now. Accounts unlock saved avatars, usernames, and leaderboard time.</p>
+          </div>
+        </div>
+        <div class="profile-panel-meta">
+          <div class="profile-panel-stat">
+            <span class="stat-label">Time Played</span>
+            <strong id="profilePanelTime">0m</strong>
+          </div>
+          <a id="profilePanelAction" class="ghost-button" href="./account.html">Open Account</a>
         </div>
       </aside>
     </section>
