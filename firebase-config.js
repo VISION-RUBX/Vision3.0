@@ -1,5 +1,6 @@
 export const visionFirebase = {
   enabled: false,
+  ownerEmails: [],
   firebaseConfig: {
     apiKey: "REPLACE_ME",
     authDomain: "REPLACE_ME",

@@ -4,8 +4,8 @@ import {
   initParticleField,
   markPageReady,
   openAboutBlankWindow
-} from "./site.js?v=20260520-vision-refresh";
-import { createDefaultAvatar, renderAvatarCanvas } from "./avatar.js?v=20260520-vision-refresh";
+} from "./site.js?v=20260520-auth-live";
+import { createDefaultAvatar, renderAvatarCanvas } from "./avatar.js?v=20260520-auth-live";
 import {
   getBackendState,
   getLeaderboardEntries,
@@ -13,7 +13,7 @@ import {
   saveThemePreference,
   startPlaytimeTracker,
   subscribeToSession
-} from "./auth-service.js?v=20260520-vision-refresh";
+} from "./auth-service.js?v=20260520-auth-live";
 
 const particleCanvas = document.getElementById("particleCanvas");
 const themeSelect = document.getElementById("themeSelect");

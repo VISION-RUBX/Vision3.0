@@ -13,13 +13,13 @@ import {
   markPageReady,
   mountMusicDock,
   openAboutBlankWindow
-} from "./site.js?v=20260520-vision-refresh";
-import { createDefaultAvatar, renderAvatarCanvas } from "./avatar.js?v=20260520-vision-refresh";
-import { initAuthSession, saveThemePreference, startPlaytimeTracker, subscribeToSession } from "./auth-service.js?v=20260520-vision-refresh";
+} from "./site.js?v=20260520-auth-live";
+import { createDefaultAvatar, renderAvatarCanvas } from "./avatar.js?v=20260520-auth-live";
+import { initAuthSession, saveThemePreference, startPlaytimeTracker, subscribeToSession } from "./auth-service.js?v=20260520-auth-live";
 
-const GAME_DATA_PATH = "./games.json?v=20260520-vision-refresh";
-const MUSIC_DATA_PATH = "./music.json?v=20260520-vision-refresh";
-const UPDATES_DATA_PATH = "./updates.json?v=20260520-vision-refresh";
+const GAME_DATA_PATH = "./games.json?v=20260520-auth-live";
+const MUSIC_DATA_PATH = "./music.json?v=20260520-auth-live";
+const UPDATES_DATA_PATH = "./updates.json?v=20260520-auth-live";
 const CATEGORY_FILTERS = ["all", "popular", "mixed", ...Array.from("ABCDEFGHIJKLMNOPQRSTUVWXYZ")];
 const FLAG_COUNTER_API = "https://api.countapi.xyz";
 const FLAG_COUNTERS = {
@@ -123,13 +123,13 @@ document.addEventListener("DOMContentLoaded", async () => {
   wireEvents();
   updateFlagUi();
   void loadFlagCounter();
+  renderGuestProfile();
   initAuthSession();
   subscribeToSession(handleSessionChange);
   startPlaytimeTracker();
   theme.subscribe(nextTheme => {
     void saveThemePreference(nextTheme).catch(() => {});
   });
-  renderGuestProfile();
   await loadContent();
 });
 

@@ -4,7 +4,7 @@ import {
   initParticleField,
   markPageReady,
   openAboutBlankWindow
-} from "./site.js?v=20260520-vision-refresh";
+} from "./site.js?v=20260520-auth-live";
 import {
   ACCENT_SWATCHES,
   createDefaultAvatar,
@@ -13,7 +13,7 @@ import {
   OUTFIT_SWATCHES,
   renderAvatarCanvas,
   SKIN_SWATCHES
-} from "./avatar.js?v=20260520-vision-refresh";
+} from "./avatar.js?v=20260520-auth-live";
 import {
   changeUsername,
   getBackendState,
@@ -28,7 +28,7 @@ import {
   signUpWithEmail,
   startPlaytimeTracker,
   subscribeToSession
-} from "./auth-service.js?v=20260520-vision-refresh";
+} from "./auth-service.js?v=20260520-auth-live";
 
 const particleCanvas = document.getElementById("particleCanvas");
 const themeSelect = document.getElementById("themeSelect");
@@ -221,7 +221,9 @@ function handleSessionChange(session) {
 
 function hydrateProfileSection(session) {
   profileHeadline.textContent = session.profile.username;
-  profileSubline.textContent = "Your Vision account saves your time, theme, username, and avatar automatically.";
+  profileSubline.textContent = session.backendMode === "local"
+    ? "Your Vision account is saving on this browser now, including time, theme, username, and avatar."
+    : "Your Vision account saves your time, theme, username, and avatar automatically.";
   profileUsername.textContent = session.profile.username;
   profileEmail.textContent = session.profile.email || session.user.email || "";
   profileTimePlayed.textContent = formatDuration(session.profile.totalTimeMs || 0);
@@ -245,29 +247,20 @@ async function hydrateOwnerPanel(session) {
 
 function renderBackendState() {
   const backendState = getBackendState();
-  const message = backendState.ready
-    ? "Accounts are live once your Firebase project is connected."
-    : backendState.message;
+  const showNotice = !backendState.ready || backendState.mode === "local";
 
-  authBackendNotice.classList.toggle("hidden", backendState.ready);
-  authBackendNotice.innerHTML = backendState.ready
-    ? ""
-    : `<h2>Account backend not connected yet</h2><p>${escapeHtmlText(message)}</p>`;
+  authBackendNotice.classList.toggle("hidden", !showNotice);
+  authBackendNotice.innerHTML = showNotice
+    ? `<h2>${backendState.ready ? "Local save mode is active" : "Account backend not connected yet"}</h2><p>${escapeHtmlText(backendState.message)}</p>`
+    : "";
 
-  googleSignInButton.disabled = !backendState.ready;
+  googleSignInButton.disabled = !backendState.supportsGoogle;
+  googleSignInButton.title = backendState.supportsGoogle ? "" : backendState.message;
   signInForm.querySelectorAll("input, button").forEach(control => {
-    if (control.type === "submit") {
-      control.disabled = !backendState.ready;
-    } else {
-      control.disabled = !backendState.ready;
-    }
+    control.disabled = !backendState.ready;
   });
   signUpForm.querySelectorAll("input, button").forEach(control => {
-    if (control.type === "submit") {
-      control.disabled = !backendState.ready;
-    } else {
-      control.disabled = !backendState.ready;
-    }
+    control.disabled = !backendState.ready;
   });
 }
 

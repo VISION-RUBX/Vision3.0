@@ -7,10 +7,10 @@ import {
   markPageReady,
   openAboutBlankWindow,
   startTransition
-} from "./site.js?v=20260520-vision-refresh";
-import { initAuthSession, saveThemePreference, startPlaytimeTracker, subscribeToSession } from "./auth-service.js?v=20260520-vision-refresh";
+} from "./site.js?v=20260520-auth-live";
+import { initAuthSession, saveThemePreference, startPlaytimeTracker, subscribeToSession } from "./auth-service.js?v=20260520-auth-live";
 
-const GAME_DATA_PATH = "./games.json?v=20260520-vision-refresh";
+const GAME_DATA_PATH = "./games.json?v=20260520-auth-live";
 
 const particleCanvas = document.getElementById("particleCanvas");
 const homepageButton = document.getElementById("homepageButton");

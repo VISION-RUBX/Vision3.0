@@ -13,7 +13,7 @@ export const STORAGE_KEYS = {
   flagLeft: "vision3.flagLeft.v2"
 };
 
-export const APP_VERSION = "20260520-vision-refresh";
+export const APP_VERSION = "20260520-auth-live";
 export const THEME_OPTIONS = [
   { key: "noir", label: "Noir" },
   { key: "graphite", label: "Graphite" },
